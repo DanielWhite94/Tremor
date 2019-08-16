@@ -17,7 +17,7 @@ const unsigned long long microsPerS=1000000llu;
 const int windowWidth=1280;
 const int windowHeight=960;
 
-const double fps=120.0;
+const double fps=60.0;
 
 const double moveSpeed=0.025;
 const double turnSpeed=M_PI/144.0;
@@ -27,30 +27,32 @@ Camera camera(0.77,15.99,5.323);
 #define MapW 16
 #define MapH 16
 #define _ {.height=0.0}
-#define W {.height=1.0}
-#define D {.height=2.0}
-#define T {.height=3.0}
-#define H {.height=9.0}
+#define w {.height=1.0, .colour={.r=128, .g=128, .b=128}}
+#define W {.height=0.7, .colour={.r=235, .g=158, .b=52}}
+#define D {.height=1.4, .colour={.r=235, .g=158, .b=52}}
+#define T {.height=2.1, .colour={.r=235, .g=158, .b=52}}
+#define H {.height=2.8, .colour={.r=235, .g=232, .b=52}}
+#define B {.height=1.5, .colour={.r=235, .g=50, .b=52}}
 const Renderer::BlockInfo map[MapH][MapW]={
-	{_,W,W,W,_,_,_,_,_,_,_,_,_,_,_,_},
-	{_,W,_,_,_,_,_,_,_,_,_,_,_,_,_,_},
-	{_,W,_,W,_,_,_,_,_,_,_,_,_,_,_,_},
-	{_,W,_,W,_,_,_,_,_,_,_,_,_,_,_,_},
-	{_,_,_,W,_,_,_,_,_,_,_,_,_,_,_,_},
-	{_,W,_,_,_,_,_,_,_,_,_,_,_,_,_,_},
-	{_,W,_,W,W,W,W,W,W,W,W,_,_,_,_,_},
-	{_,W,_,W,W,D,D,D,D,D,W,_,_,_,_,_},
+	{w,w,w,_,_,_,B,B,B,_,B,B,B,_,B,B},
+	{w,_,_,_,_,_,_,_,_,_,_,_,_,_,_,B},
+	{w,_,w,_,_,_,_,_,_,_,_,_,_,_,_,_},
+	{w,_,w,_,_,_,_,_,_,_,_,_,_,_,_,B},
+	{_,_,w,_,_,_,_,_,_,_,_,_,_,_,_,B},
+	{w,_,_,_,_,_,_,_,_,_,_,_,_,_,_,B},
+	{w,_,w,_,W,W,W,W,W,W,W,_,_,_,_,_},
+	{w,_,w,_,W,D,D,D,D,D,W,_,_,_,_,B},
+	{_,_,_,_,W,D,T,T,T,D,W,_,_,_,_,B},
+	{_,_,_,_,W,D,T,H,T,D,W,_,_,_,_,B},
 	{_,_,_,_,W,D,T,T,T,D,W,_,_,_,_,_},
-	{_,_,_,_,W,D,T,H,T,D,W,_,_,_,_,_},
-	{_,_,_,_,W,D,T,T,T,D,W,_,_,_,_,_},
-	{_,_,_,_,W,D,D,D,D,D,W,_,_,_,_,_},
-	{_,_,_,_,W,W,W,W,W,W,W,_,_,_,_,_},
+	{_,_,_,_,W,D,D,D,D,D,W,_,_,_,_,B},
+	{_,_,_,_,W,W,W,W,W,W,W,_,_,_,_,B},
+	{_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,B},
 	{_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_},
-	{_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_},
-	{_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_},
+	{_,_,_,_,_,_,_,_,_,_,_,B,B,B,_,B},
 };
 #undef _
-#undef W
+#undef w
 #undef D
 #undef T
 #undef H
@@ -190,6 +192,9 @@ bool demoGetBlockInfoFunctor(int mapX, int mapY, Renderer::BlockInfo *info) {
 		if (!((mapX%5==0) && (mapY%5==0) && mapX>0))
 			return false;
 		info->height=6.0;
+		info->colour.r=64;
+		info->colour.g=64;
+		info->colour.b=64;
 		return true;
 	}
 

@@ -12,7 +12,7 @@ namespace RayCast {
 	public:
 		struct BlockInfo {
 			double height;
-			// TODO: add colour
+			Colour colour;
 		};
 
 		typedef bool (GetBlockInfoFunctor)(int mapX, int mapY, BlockInfo *info); // should return false if no such block

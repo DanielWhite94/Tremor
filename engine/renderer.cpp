@@ -102,7 +102,7 @@ namespace RayCast {
 					blockDisplayHeight=blockDisplayBase;
 
 				// Calculate display colour for block
-				Colour blockDisplayColour={.r=255, .g=0, .b=0}; // TODO: Get from BlockInfo
+				Colour blockDisplayColour=slices[slicesNext].blockInfo.colour;
 				if (slices[slicesNext].intersectionSide)
 					blockDisplayColour.mul(0.7); // make edges/corners between horizontal and vertical walls clearer
 				colourAdjustForDistance(blockDisplayColour, slices[slicesNext].distance);
