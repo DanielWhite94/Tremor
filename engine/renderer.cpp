@@ -197,7 +197,7 @@ namespace RayCast {
 		#undef SY
 	}
 
-	double Renderer::computeDisplayHeight(const double &blockHeight, const double &distance) {
+	int Renderer::computeDisplayHeight(const double &blockHeight, const double &distance) {
 		return (distance>0 ? blockHeight/distance : std::numeric_limits<double>::max());
 	}
 

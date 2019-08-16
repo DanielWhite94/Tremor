@@ -39,7 +39,7 @@ namespace RayCast {
 		const double blockBaseHeight=64;
 		Colour colourBg, colourGround, colourSky;
 
-		static double computeDisplayHeight(const double &blockHeight, const double &distance);
+		static int computeDisplayHeight(const double &blockHeight, const double &distance);
 
 		double colourDistanceFactor(double distance) const ;
 		void colourAdjustForDistance(Colour &colour, double distance) const ;
