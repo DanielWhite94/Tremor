@@ -117,39 +117,66 @@ namespace RayCast {
 	}
 
 	void Renderer::renderTopDown(const Camera &camera) {
-		#define SX(X) (((int)(windowWidth/2+cellW*(camera.getX()-(X))))/divisor)
-		#define SY(Y) (((int)(windowHeight/2+cellH*(camera.getY()-(Y))))/divisor)
+		#define SX(X) (((int)(windowWidth/2+cellW*(camera.getX()-(X))))/divisor+xOffset)
+		#define SY(Y) (((int)(windowHeight/2+cellH*(camera.getY()-(Y))))/divisor+yOffset)
 
+		// Parameters
+		const int xOffset=0;
+		const int yOffset=0;
 		const int divisor=4;
 		const int cellW=16*divisor;
 		const int cellH=16*divisor;
 
+		// Calculate constants
+		int cellsWide=windowWidth/cellW;
+		int cellsHigh=windowHeight/cellH;
+		int minMapX=ceil(camera.getX())-cellsWide/2;
+		int minMapY=ceil(camera.getY())-cellsHigh/2;
+		int maxMapX=floor(camera.getX())+cellsWide/2;
+		int maxMapY=floor(camera.getY())+cellsHigh/2;
+		int x, y;
+
 		// Clear screen
 		SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
-		SDL_Rect rect={0, 0, windowWidth/divisor, windowHeight/divisor};
+		SDL_Rect rect={xOffset, yOffset, (cellsWide*cellW)/divisor, (cellsHigh*cellH)/divisor};
 		SDL_RenderFillRect(renderer, &rect);
 
-		// Draw tile grid
-		int cellsWide=windowWidth/cellW+2;
-		int cellsHigh=windowHeight/cellH+2;
-		int minMapX=floor(camera.getX())-cellsWide/2+2;
-		int minMapY=floor(camera.getY())-cellsHigh/2+2;
-		int maxMapX=ceil(camera.getX())+cellsWide/2-1;
-		int maxMapY=ceil(camera.getY())+cellsHigh/2-1;
+		// Draw blocks
+		for(y=minMapY;y<=maxMapY;++y) {
+			for(x=minMapX;x<=maxMapX;++x) {
+				// Grab block
+				BlockInfo blockInfo;
+				if (!getBlockInfoFunctor(x, y, &blockInfo))
+					continue;
+
+				// Draw block
+				SDL_SetRenderDrawColor(renderer, blockInfo.colour.r, blockInfo.colour.g, blockInfo.colour.b, 255);
+				SDL_Rect rect={SX(x), SY(y), cellW/divisor, cellH/divisor};
+				SDL_RenderFillRect(renderer, &rect);
+			}
+		}
+
+		// Draw grid over blocks
 		SDL_SetRenderDrawColor(renderer, 196, 196, 196, 255);
-		int x, y;
 		for(x=minMapX;x<=maxMapX;++x)
-			SDL_RenderDrawLine(renderer, SX(x), 0, SX(x), windowHeight/divisor);
+			SDL_RenderDrawLine(renderer, SX(x), yOffset, SX(x), windowHeight/divisor+yOffset);
 		for(y=minMapY;y<=maxMapY;++y)
-			SDL_RenderDrawLine(renderer, 0, SY(y), windowWidth/divisor, SY(y));
+			SDL_RenderDrawLine(renderer, xOffset, SY(y), windowWidth/divisor+xOffset, SY(y));
 
 		// Trace ray and highlight cells it intersects
 		Ray ray(camera.getX(), camera.getY(), camera.getAngle());
 		int i;
 		for(i=0;i<64;++i) {
+			x=ray.getMapX();
+			y=ray.getMapY();
+
+			// Out of grid?
+			if (x<minMapX || x>=maxMapX || y<minMapY || y>=maxMapY)
+				break;
+
 			// Draw highlighted cell.
 			SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255);
-			SDL_Rect rect={SX(ray.getMapX())+1, SY(ray.getMapY())+1, (cellW-1)/divisor, (cellH-1)/divisor};
+			SDL_Rect rect={SX(x)+1, SY(y)+1, (cellW-1)/divisor, (cellH-1)/divisor};
 			SDL_RenderFillRect(renderer, &rect);
 
 			// Advance ray.
