@@ -28,6 +28,10 @@ namespace RayCast {
 		struct BlockDisplaySlice {
 			double distance;
 			Ray::Side intersectionSide;
+
+			int blockDisplayBase;
+			int blockDisplayHeight;
+
 			BlockInfo blockInfo;
 		};
 

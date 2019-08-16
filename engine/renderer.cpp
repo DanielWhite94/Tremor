@@ -23,6 +23,9 @@ namespace RayCast {
 	}
 
 	void Renderer::render(const Camera &camera) {
+		// Parameters
+		const double unitBlockHeight=1024.0; // increasing this will stretch blocks to be larger vertically relative to their width, decreasing will shrink them
+
 		// Calculate various useful values.
 		double screenDist=windowWidth/(2*tan(camera.getFov()/2));
 
@@ -79,9 +82,18 @@ namespace RayCast {
 				if (slicesNext>0 && slices[slicesNext].blockInfo.height<=slices[slicesNext-1].blockInfo.height)
 					continue;
 
-				// We have already added blockInfo to slice stack, so add other fields now.
+				// We have already added blockInfo to slice stack, so add and compute other fields now.
 				slices[slicesNext].distance=ray.getTrueDistance();
 				slices[slicesNext].intersectionSide=ray.getSide();
+
+				int unitBlockDisplayHeight=this->computeDisplayHeight(unitBlockHeight, slices[slicesNext].distance);
+				slices[slicesNext].blockDisplayBase=(windowHeight+unitBlockDisplayHeight)/2;
+
+				double blockTrueHeight=slices[slicesNext].blockInfo.height*unitBlockHeight;
+				slices[slicesNext].blockDisplayHeight=this->computeDisplayHeight(blockTrueHeight, slices[slicesNext].distance);
+				if (slices[slicesNext].blockDisplayBase-slices[slicesNext].blockDisplayHeight<0)
+					slices[slicesNext].blockDisplayHeight=slices[slicesNext].blockDisplayBase;
+
 				++slicesNext;
 			}
 
@@ -89,16 +101,6 @@ namespace RayCast {
 			while(slicesNext>0) {
 				// Adjust slicesNext now due to how it usually points one beyond last entry
 				--slicesNext;
-
-				// Calculate display height for this block from 'true distance'
-				const double unitBlockHeight=1024.0;
-				int unitBlockDisplayHeight=this->computeDisplayHeight(unitBlockHeight, slices[slicesNext].distance);
-				int blockDisplayBase=(windowHeight+unitBlockDisplayHeight)/2;
-
-				double blockTrueHeight=slices[slicesNext].blockInfo.height*unitBlockHeight;
-				int blockDisplayHeight=this->computeDisplayHeight(blockTrueHeight, slices[slicesNext].distance);
-				if (blockDisplayBase-blockDisplayHeight<0)
-					blockDisplayHeight=blockDisplayBase;
 
 				// Calculate display colour for block
 				Colour blockDisplayColour=slices[slicesNext].blockInfo.colour;
@@ -108,7 +110,7 @@ namespace RayCast {
 
 				// Draw block
 				SDL_SetRenderDrawColor(renderer, blockDisplayColour.r, blockDisplayColour.g, blockDisplayColour.b, 255);
-				SDL_RenderDrawLine(renderer, x, blockDisplayBase-blockDisplayHeight, x, blockDisplayBase);
+				SDL_RenderDrawLine(renderer, x, slices[slicesNext].blockDisplayBase-slices[slicesNext].blockDisplayHeight, x, slices[slicesNext].blockDisplayBase);
 			}
 
 			#undef SlicesMax
