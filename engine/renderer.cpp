@@ -53,50 +53,66 @@ namespace RayCast {
 
 		// Draw blocks.
 		// Loop over each vertical slice of the screen.
+
 		int x;
 		for(x=0;x<windowWidth;++x) {
-			// Trace ray from view point at this angle.
+			// Trace ray from view point at this angle to collect a list of 'slices' of blocks to later draw.
 			double deltaAngle=atan((x-windowWidth/2)/screenDist);
 			double angle=camera.getAngle()+deltaAngle;
 			Ray ray(camera.getX(), camera.getY(), angle);
 
-			for(double stepCount=0;stepCount<camera.
-			getMaxDist();++stepCount) { // FIXME: This is just a hack (the distance is limited but not correctly).
+			#define SlicesMax 64
+			BlockDisplaySlice slices[SlicesMax];
+			size_t slicesNext=0;
+
+			for(double stepCount=0;stepCount<camera.getMaxDist();++stepCount) { // FIXME: This is just a hack (the distance is limited but not correctly).
 				// Advance ray to next (or first) intersection point.
 				ray.next();
 
 				// Get info for block at current ray position.
 				int mapX=ray.getMapX();
 				int mapY=ray.getMapY();
-				BlockInfo blockInfo;
-				if (!getBlockInfoFunctor(mapX, mapY, &blockInfo))
+				if (!getBlockInfoFunctor(mapX, mapY, &slices[slicesNext].blockInfo))
+					continue; // no block
+
+				// If this block is no taller than a one already found, then it will be hidden anyway so don't bother adding to slice stack.
+				// FIXME: this logic will break if we end up supporting mapping textures with transparency onto blocks
+				if (slicesNext>0 && slices[slicesNext].blockInfo.height<=slices[slicesNext-1].blockInfo.height)
 					continue;
 
-				// Calculate display height for block from 'true distance'
-				double distance=ray.getTrueDistance();
+				// We have already added blockInfo to slice stack, so add other fields now.
+				slices[slicesNext].distance=ray.getTrueDistance();
+				slices[slicesNext].intersectionSide=ray.getSide();
+				++slicesNext;
+			}
 
+			// Loop over found blocks in reverse
+			while(slicesNext>0) {
+				// Adjust slicesNext now due to how it usually points one beyond last entry
+				--slicesNext;
+
+				// Calculate display height for this block from 'true distance'
 				const double unitBlockHeight=512.0;
-				int unitBlockDisplayHeight=this->computeDisplayHeight(unitBlockHeight, distance);
+				int unitBlockDisplayHeight=this->computeDisplayHeight(unitBlockHeight, slices[slicesNext].distance);
 				int blockDisplayBase=(windowHeight+unitBlockDisplayHeight)/2;
 
-				double blockTrueHeight=blockInfo.height*unitBlockHeight;
-				int blockDisplayHeight=this->computeDisplayHeight(blockTrueHeight, distance);
+				double blockTrueHeight=slices[slicesNext].blockInfo.height*unitBlockHeight;
+				int blockDisplayHeight=this->computeDisplayHeight(blockTrueHeight, slices[slicesNext].distance);
 				if (blockDisplayBase-blockDisplayHeight<0)
 					blockDisplayHeight=blockDisplayBase;
 
 				// Calculate display colour for block
 				Colour blockDisplayColour={.r=255, .g=0, .b=0}; // TODO: Get from BlockInfo
-				if (ray.getSide())
+				if (slices[slicesNext].intersectionSide)
 					blockDisplayColour.mul(0.7); // make edges/corners between horizontal and vertical walls clearer
-				colourAdjustForDistance(blockDisplayColour, distance);
+				colourAdjustForDistance(blockDisplayColour, slices[slicesNext].distance);
 
 				// Draw block
 				SDL_SetRenderDrawColor(renderer, blockDisplayColour.r, blockDisplayColour.g, blockDisplayColour.b, 255);
 				SDL_RenderDrawLine(renderer, x, blockDisplayBase-blockDisplayHeight, x, blockDisplayBase);
-
-				// Move onto next ray.
-				break;
 			}
+
+			#undef SlicesMax
 		}
 	}
 

@@ -24,6 +24,12 @@ namespace RayCast {
 		void renderTopDown(const Camera &camera);
 
 	private:
+		struct BlockDisplaySlice {
+			double distance;
+			int intersectionSide;
+			BlockInfo blockInfo;
+		};
+
 		SDL_Renderer *renderer;
 		int windowWidth;
 		int windowHeight;
