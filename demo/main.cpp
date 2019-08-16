@@ -29,8 +29,8 @@ Camera camera(0.77,15.99,5.323);
 #define _ {.height=0.0}
 #define w {.height=1.0, .colour={.r=128, .g=128, .b=128}}
 #define W {.height=0.7, .colour={.r=235, .g=158, .b=52}}
-#define D {.height=1.4, .colour={.r=235, .g=158, .b=52}}
-#define T {.height=2.1, .colour={.r=235, .g=158, .b=52}}
+#define D {.height=1.4, .colour={.r=235, .g=170, .b=52}}
+#define T {.height=2.1, .colour={.r=235, .g=200, .b=52}}
 #define H {.height=2.8, .colour={.r=235, .g=232, .b=52}}
 #define B {.height=1.5, .colour={.r=235, .g=50, .b=52}}
 const Renderer::BlockInfo map[MapH][MapW]={
