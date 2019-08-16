@@ -95,6 +95,11 @@ namespace RayCast {
 					slices[slicesNext].blockDisplayHeight=slices[slicesNext].blockDisplayBase;
 
 				++slicesNext;
+
+				// If this block occupies whole column already, no point searching further.
+				// FIXME: this logic will break if we end up supporting mapping textures with transparency onto blocks
+				if (slices[slicesNext-1].blockDisplayHeight==slices[slicesNext-1].blockDisplayBase)
+					break;
 			}
 
 			// Loop over found blocks in reverse
