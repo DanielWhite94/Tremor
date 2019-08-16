@@ -157,14 +157,21 @@ void demoPhysicsTick(void) {
 	// Inspect keyboard state to potentially move player/camera
 	SDL_PumpEvents();
 	const Uint8 *state=SDL_GetKeyboardState(NULL);
-	if (state[SDL_SCANCODE_LEFT])
+
+	double trueMoveSpeed=moveSpeed;
+	if (state[SDL_SCANCODE_LSHIFT])
+		trueMoveSpeed*=2;
+
+	if (state[SDL_SCANCODE_A])
 		camera.turn(-turnSpeed);
-	if (state[SDL_SCANCODE_RIGHT])
+	if (state[SDL_SCANCODE_D])
 		camera.turn(turnSpeed);
-	if (state[SDL_SCANCODE_UP])
-		camera.move(moveSpeed);
-	if (state[SDL_SCANCODE_DOWN])
-		camera.move(-moveSpeed);
+	if (state[SDL_SCANCODE_W])
+		camera.move(trueMoveSpeed);
+	if (state[SDL_SCANCODE_S])
+		camera.move(-trueMoveSpeed);
+
+	// printf("camera (x,y,angle)=(%.2f,%.2f,%.3f)\n", camera.getX(), camera.getY(), camera.getAngle());
 }
 
 void demoRedraw(void) {
