@@ -117,51 +117,52 @@ namespace RayCast {
 	}
 
 	void Renderer::renderTopDown(const Camera &camera) {
-		#define SX(X) ((int)(windowWidth/2+cellW*(camera.getX()-(X))))
-		#define SY(Y) ((int)(windowHeight/2+cellH*(camera.getY()-(Y))))
+		#define SX(X) (((int)(windowWidth/2+cellW*(camera.getX()-(X))))/divisor)
+		#define SY(Y) (((int)(windowHeight/2+cellH*(camera.getY()-(Y))))/divisor)
 
-		const int cellW=16;
-		const int cellH=16;
+		const int divisor=4;
+		const int cellW=16*divisor;
+		const int cellH=16*divisor;
 
-		// Clear screen.
+		// Clear screen
 		SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
-		SDL_Rect rect={0, 0, windowWidth, windowHeight};
+		SDL_Rect rect={0, 0, windowWidth/divisor, windowHeight/divisor};
 		SDL_RenderFillRect(renderer, &rect);
 
-		// Debugging grid.
+		// Draw tile grid
 		int cellsWide=windowWidth/cellW+2;
 		int cellsHigh=windowHeight/cellH+2;
-		int minMapX=floor(camera.getX())-cellsWide/2;
-		int minMapY=floor(camera.getY())-cellsHigh/2;
-		int maxMapX=minMapX+cellsWide;
-		int maxMapY=minMapY+cellsHigh;
+		int minMapX=floor(camera.getX())-cellsWide/2+2;
+		int minMapY=floor(camera.getY())-cellsHigh/2+2;
+		int maxMapX=ceil(camera.getX())+cellsWide/2-1;
+		int maxMapY=ceil(camera.getY())+cellsHigh/2-1;
 		SDL_SetRenderDrawColor(renderer, 196, 196, 196, 255);
 		int x, y;
 		for(x=minMapX;x<=maxMapX;++x)
-			SDL_RenderDrawLine(renderer, SX(x), 0, SX(x), windowHeight);
+			SDL_RenderDrawLine(renderer, SX(x), 0, SX(x), windowHeight/divisor);
 		for(y=minMapY;y<=maxMapY;++y)
-			SDL_RenderDrawLine(renderer, 0, SY(y), windowWidth, SY(y));
+			SDL_RenderDrawLine(renderer, 0, SY(y), windowWidth/divisor, SY(y));
 
-		// Trace ray.
+		// Trace ray and highlight cells it intersects
 		Ray ray(camera.getX(), camera.getY(), camera.getAngle());
 		int i;
 		for(i=0;i<64;++i) {
 			// Draw highlighted cell.
 			SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255);
-			SDL_Rect rect={SX(ray.getMapX())+1, SY(ray.getMapY())+1, cellW-1, cellH-1};
+			SDL_Rect rect={SX(ray.getMapX())+1, SY(ray.getMapY())+1, (cellW-1)/divisor, (cellH-1)/divisor};
 			SDL_RenderFillRect(renderer, &rect);
 
 			// Advance ray.
 			ray.next();
 		}
 
-		// Camera cross-hair.
+		// Draw cross-hair to represent camera
 		int k=2;
 		SDL_SetRenderDrawColor(renderer, 0, 0, 255, 255);
 		SDL_RenderDrawLine(renderer, SX(camera.getX())-k, SY(camera.getY())-k, SX(camera.getX())+k, SY(camera.getY())+k);
 		SDL_RenderDrawLine(renderer, SX(camera.getX())-k, SY(camera.getY())+k, SX(camera.getX())+k, SY(camera.getY())-k);
 
-		// Line of sight.
+		// Draw camera's line of sight
 		SDL_SetRenderDrawColor(renderer, 0, 255, 0, 255);
 		double len=64.0;
 		SDL_RenderDrawLine(renderer, SX(camera.getX()), SY(camera.getY()), SX(camera.getX()+cos(camera.getAngle())*len), SY(camera.getY()+sin(camera.getAngle())*len));

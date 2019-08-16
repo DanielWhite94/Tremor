@@ -179,7 +179,7 @@ void demoPhysicsTick(void) {
 void demoRedraw(void) {
 	// Perform ray casting
 	renderer->render(camera);
-	//renderer->renderTopDown(camera);
+	renderer->renderTopDown(camera);
 
 	// Update the screen.
 	SDL_RenderPresent(sdlRenderer);
