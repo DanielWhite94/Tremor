@@ -19,8 +19,8 @@ const int windowHeight=960;
 
 const double fps=60.0;
 
-const double moveSpeed=0.025;
-const double turnSpeed=M_PI/144.0;
+const double moveSpeed=0.07;
+const double turnSpeed=M_PI/100.0;
 
 Camera camera(0.77,15.99,5.323);
 
