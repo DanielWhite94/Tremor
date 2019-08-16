@@ -22,7 +22,7 @@ const double fps=120.0;
 const double moveSpeed=0.025;
 const double turnSpeed=M_PI/144.0;
 
-Camera camera(13.4, 8.0, M_PI);
+Camera camera(0.77,15.99,5.323);
 
 #define MapW 16
 #define MapH 16
