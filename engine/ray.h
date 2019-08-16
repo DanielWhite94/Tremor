@@ -5,6 +5,11 @@ namespace RayCast {
 
 	class Ray {
 	public:
+		enum class Side {
+			Vertical,
+			Horizontal,
+			None, // next() has not yet been called on the ray and so we have not hit any walls
+		};
 		Ray(double x, double y, double angle); // 0<=angle<2pi, in radians.
 		~Ray();
 
@@ -15,7 +20,7 @@ namespace RayCast {
 
 		double getTrueDistance(void) const ; // 'Perpendicular' distance between ray's initial and current position.
 
-		int getSide(void) const ; // Which type of intersection (0 - vertical, 1 - horizontal).
+		Side getSide(void) const ; // Type of of last intersection
 
 	private:
 		double startX, startY;
@@ -24,7 +29,7 @@ namespace RayCast {
 		double sideDistX, sideDistY; // Length of ray from current position to next x (or y) side.
 		double deltaDistX, deltaDistY; // Length of ray from one x (or y) side to next x (or y) side.
 		int stepX, stepY; // What direction to step in x (or y) direction (either +1 or -1).
-		int side;
+		Side side;
 	};
 
 };

@@ -5,6 +5,7 @@
 
 #include "camera.h"
 #include "colour.h"
+#include "ray.h"
 
 namespace RayCast {
 
@@ -26,7 +27,7 @@ namespace RayCast {
 	private:
 		struct BlockDisplaySlice {
 			double distance;
-			int intersectionSide;
+			Ray::Side intersectionSide;
 			BlockInfo blockInfo;
 		};
 

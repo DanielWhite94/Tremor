@@ -53,7 +53,6 @@ namespace RayCast {
 
 		// Draw blocks.
 		// Loop over each vertical slice of the screen.
-
 		int x;
 		for(x=0;x<windowWidth;++x) {
 			// Trace ray from view point at this angle to collect a list of 'slices' of blocks to later draw.
@@ -103,7 +102,7 @@ namespace RayCast {
 
 				// Calculate display colour for block
 				Colour blockDisplayColour=slices[slicesNext].blockInfo.colour;
-				if (slices[slicesNext].intersectionSide)
+				if (slices[slicesNext].intersectionSide==Ray::Side::Horizontal)
 					blockDisplayColour.mul(0.7); // make edges/corners between horizontal and vertical walls clearer
 				colourAdjustForDistance(blockDisplayColour, slices[slicesNext].distance);
 

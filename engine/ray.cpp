@@ -1,3 +1,4 @@
+#include <cassert>
 #include <cmath>
 #include <limits>
 
@@ -35,6 +36,8 @@ namespace RayCast {
 			stepY=1;
 			sideDistY=(mapY+1-startY)*deltaDistY;
 		}
+
+		side=Side::None;
 	}
 
 	Ray::~Ray() {
@@ -44,11 +47,11 @@ namespace RayCast {
 		if (sideDistX<sideDistY) {
 			sideDistX+=deltaDistX;
 			mapX+=stepX;
-			side=0;
+			side=Side::Vertical;
 		} else {
 			sideDistY+=deltaDistY;
 			mapY+=stepY;
-			side=1;
+			side=Side::Horizontal;
 		}
 	}
 
@@ -61,15 +64,23 @@ namespace RayCast {
 	}
 
 	double Ray::getTrueDistance(void) const {
-		double distance;
-		if (side==0)
-			distance=(rayDirX!=0 ? fabs((mapX-startX+(1-stepX)/2)/rayDirX) : std::numeric_limits<double>::max());
-		else
-			distance=(rayDirY!=0 ? fabs((mapY-startY+(1-stepY)/2)/rayDirY) : std::numeric_limits<double>::max());
-		return distance;
+		switch(side) {
+			case Side::Vertical:
+				return (rayDirX!=0 ? fabs((mapX-startX+(1-stepX)/2)/rayDirX) : std::numeric_limits<double>::max());
+			break;
+			case Side::Horizontal:
+				return (rayDirY!=0 ? fabs((mapY-startY+(1-stepY)/2)/rayDirY) : std::numeric_limits<double>::max());
+			break;
+			case Side::None:
+				return 0.0;
+			break;
+		}
+
+		assert(false);
+		return 0.0;
 	}
 
-	int Ray::getSide(void) const {
+	Ray::Side Ray::getSide(void) const {
 		return side;
 	}
 
