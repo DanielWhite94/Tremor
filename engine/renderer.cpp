@@ -65,7 +65,7 @@ namespace RayCast {
 			BlockDisplaySlice slices[SlicesMax];
 			size_t slicesNext=0;
 
-			for(double stepCount=0;stepCount<camera.getMaxDist();++stepCount) { // FIXME: This is just a hack (the distance is limited but not correctly).
+			while(ray.getTrueDistance()<camera.getMaxDist()) {
 				// Advance ray to next (or first) intersection point.
 				ray.next();
 
