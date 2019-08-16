@@ -1,0 +1,8 @@
+# Backup files.
+*~
+
+# Object files.
+*.o
+
+# Executable
+main

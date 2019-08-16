@@ -1,0 +1,42 @@
+#ifndef RAYCAST_RENDERER_H
+#define RAYCAST_RENDERER_H
+
+#include <SDL2/SDL.h>
+
+#include "camera.h"
+#include "colour.h"
+
+namespace RayCast {
+
+	class Renderer {
+	public:
+		struct BlockInfo {
+			double height;
+			// TODO: add colour
+		};
+
+		typedef bool (GetBlockInfoFunctor)(int mapX, int mapY, BlockInfo *info); // should return false if no such block
+
+		Renderer(SDL_Renderer *renderer, int windowWidth, int windowHeight, GetBlockInfoFunctor *getBlockInfoFunctor);
+		~Renderer();
+
+		void render(const Camera &camera);
+		void renderTopDown(const Camera &camera);
+
+	private:
+		SDL_Renderer *renderer;
+		int windowWidth;
+		int windowHeight;
+		GetBlockInfoFunctor *getBlockInfoFunctor;
+
+		const double blockBaseHeight=64;
+		Colour colourBg, colourGround, colourSky;
+
+		static double computeDisplayHeight(const double &blockHeight, const double &distance);
+
+		double colourDistanceFactor(double distance) const ;
+		void colourAdjustForDistance(Colour &colour, double distance) const ;
+	};
+};
+
+#endif
