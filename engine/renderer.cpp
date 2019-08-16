@@ -92,7 +92,7 @@ namespace RayCast {
 				--slicesNext;
 
 				// Calculate display height for this block from 'true distance'
-				const double unitBlockHeight=512.0;
+				const double unitBlockHeight=1024.0;
 				int unitBlockDisplayHeight=this->computeDisplayHeight(unitBlockHeight, slices[slicesNext].distance);
 				int blockDisplayBase=(windowHeight+unitBlockDisplayHeight)/2;
 
