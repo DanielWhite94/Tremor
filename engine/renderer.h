@@ -32,6 +32,8 @@ namespace RayCast {
 			int blockDisplayBase;
 			int blockDisplayHeight;
 
+			int blockDisplayTopSize; // only defined if top is visible
+
 			BlockInfo blockInfo;
 		};
 

@@ -69,20 +69,15 @@ namespace RayCast {
 			BlockDisplaySlice slices[SlicesMax];
 			size_t slicesNext=0;
 
+			ray.next(); // advance ray to first intersection point
 			while(ray.getTrueDistance()<camera.getMaxDist()) {
-				// Advance ray to next (or first) intersection point.
-				ray.next();
-
 				// Get info for block at current ray position.
 				int mapX=ray.getMapX();
 				int mapY=ray.getMapY();
-				if (!getBlockInfoFunctor(mapX, mapY, &slices[slicesNext].blockInfo))
+				if (!getBlockInfoFunctor(mapX, mapY, &slices[slicesNext].blockInfo)) {
+					ray.next(); // advance ray here as we skip proper advancing futher in loop body
 					continue; // no block
-
-				// If this block is no taller than a one already found, then it will be hidden anyway so don't bother adding to slice stack.
-				// FIXME: this logic will break if we end up supporting mapping textures with transparency onto blocks
-				if (slicesNext>0 && slices[slicesNext].blockInfo.height<=slices[slicesNext-1].blockInfo.height)
-					continue;
+				}
 
 				// We have already added blockInfo to slice stack, so add and compute other fields now.
 				slices[slicesNext].distance=ray.getTrueDistance();
@@ -99,12 +94,38 @@ namespace RayCast {
 				if (slices[slicesNext].blockDisplayBase-slices[slicesNext].blockDisplayHeight<0)
 					slices[slicesNext].blockDisplayHeight=slices[slicesNext].blockDisplayBase;
 
-				++slicesNext;
-
 				// If this block occupies whole column already, no point searching further.
 				// FIXME: this logic will break if we end up supporting mapping textures with transparency onto blocks
-				if (slices[slicesNext-1].blockDisplayHeight==slices[slicesNext-1].blockDisplayBase)
+				if (slices[slicesNext].blockDisplayHeight==slices[slicesNext].blockDisplayBase) {
+					++slicesNext;
 					break;
+				}
+
+				// Advance ray to next itersection now ready for next iteration, and for use in block top calculations.
+				ray.next();
+
+				// If top of block is visible, compute some extra stuff.
+				int blockDisplayTop=slices[slicesNext].blockDisplayBase-slices[slicesNext].blockDisplayHeight;
+				if (blockDisplayTop>windowHeight/2) {
+					double nextDistance=ray.getTrueDistance();
+
+					int unitNextBlockDisplayHeight=this->computeDisplayHeight(unitBlockHeight, nextDistance);
+					int nextBlockDisplayBase=(windowHeight+unitNextBlockDisplayHeight)/2;
+
+					double nextCameraZDistanceFactor=1.0/nextDistance;
+					nextBlockDisplayBase+=nextCameraZDistanceFactor*cameraZScreenAdjustment;
+
+					double nextBlockTrueHeight=slices[slicesNext].blockInfo.height*unitBlockHeight;
+					int nextBlockDisplayHeight=this->computeDisplayHeight(nextBlockTrueHeight, nextDistance);
+					if (nextBlockDisplayBase-nextBlockDisplayHeight<0)
+						nextBlockDisplayHeight=nextBlockDisplayBase;
+
+					int nextBlockDisplayTop=nextBlockDisplayBase-nextBlockDisplayHeight;
+					slices[slicesNext].blockDisplayTopSize=blockDisplayTop-nextBlockDisplayTop;
+				}
+
+				// Push slice to stack
+				++slicesNext;
 			}
 
 			// Loop over found blocks in reverse
@@ -121,6 +142,15 @@ namespace RayCast {
 				// Draw block
 				SDL_SetRenderDrawColor(renderer, blockDisplayColour.r, blockDisplayColour.g, blockDisplayColour.b, 255);
 				SDL_RenderDrawLine(renderer, x, slices[slicesNext].blockDisplayBase-slices[slicesNext].blockDisplayHeight, x, slices[slicesNext].blockDisplayBase);
+
+				// Do we need to draw top of this block? (because it is below the horizon)
+				int blockDisplayTop=slices[slicesNext].blockDisplayBase-slices[slicesNext].blockDisplayHeight;
+				if (blockDisplayTop>windowHeight/2) {
+					Colour blockTopDisplayColour=slices[slicesNext].blockInfo.colour;
+					blockTopDisplayColour.mul(1.05);
+					SDL_SetRenderDrawColor(renderer, blockTopDisplayColour.r, blockTopDisplayColour.g, blockTopDisplayColour.b, 255);
+					SDL_RenderDrawLine(renderer, x, blockDisplayTop-slices[slicesNext].blockDisplayTopSize, x, blockDisplayTop);
+				}
 			}
 
 			#undef SlicesMax
