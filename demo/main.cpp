@@ -25,7 +25,7 @@ const unsigned long long jumpTime=1000000llu;
 const double jumpHeight=0.3; // max vertical displacement
 const double crouchHeight=0.3; // actual height when crouched, compared to 0.5 standing
 
-Camera camera(0.730000,15.520000,0.5,4.690450);
+Camera camera(-5.928415,10.382321,0.500000,6.261246);
 
 #define MapW 16
 #define MapH 16
@@ -36,29 +36,47 @@ Camera camera(0.730000,15.520000,0.5,4.690450);
 #define T {.height=2.1, .colour={.r=235, .g=200, .b=52}}
 #define H {.height=2.8, .colour={.r=235, .g=232, .b=52}}
 #define B {.height=1.5, .colour={.r=235, .g=50, .b=52}}
+#define s1 {.height=0.1, .colour={.r=177, .g=3, .b=252}}
+#define s2 {.height=0.2, .colour={.r=177, .g=3, .b=252}}
+#define s3 {.height=0.3, .colour={.r=177, .g=3, .b=252}}
+#define s4 {.height=0.4, .colour={.r=177, .g=3, .b=252}}
+#define s5 {.height=0.5, .colour={.r=177, .g=3, .b=252}}
+#define s6 {.height=0.6, .colour={.r=177, .g=3, .b=252}}
+#define s7 {.height=0.7, .colour={.r=177, .g=3, .b=252}}
+#define s8 {.height=0.8, .colour={.r=177, .g=3, .b=252}}
+#define s9 {.height=0.9, .colour={.r=177, .g=3, .b=252}}
 const Renderer::BlockInfo map[MapH][MapW]={
-	{W,W,W,_,_,_,_,_,_,_,_,_,_,_,_,_},
-	{_,_,_,_,_,_,_,_,_,_,_,_,_,_,_,_},
-	{w,w,w,_,w,_,B,B,B,_,B,B,B,_,B,B},
-	{w,_,_,_,w,_,_,_,_,_,_,_,_,_,_,B},
-	{w,_,w,_,_,_,_,_,_,_,_,_,_,_,_,_},
-	{w,_,w,_,w,w,w,_,_,_,_,_,_,_,_,B},
-	{_,_,w,_,w,_,_,_,_,_,_,_,_,_,_,B},
-	{w,_,_,_,_,_,_,_,_,_,_,_,_,_,_,B},
-	{w,_,w,_,W,W,W,W,W,W,W,_,_,_,_,_},
-	{w,_,w,_,W,D,D,D,D,D,W,_,_,_,_,B},
-	{_,_,_,_,W,D,T,T,T,D,W,_,_,_,_,B},
-	{_,_,_,_,W,D,T,H,T,D,W,_,_,_,_,B},
-	{_,_,_,_,W,D,T,T,T,D,W,_,_,_,_,_},
-	{_,_,_,_,W,D,D,D,D,D,W,_,_,_,_,B},
-	{_,_,_,_,W,W,W,W,W,W,W,_,_,_,_,B},
-	{_,_,_,_,_,_,_,_,_,_,_,B,B,B,_,B},
+	{ W, W, W, _, _, _, _, _, _, _, _, _, _, _, _, _},
+	{ _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _},
+	{ w, w, w, _, w, _, B, B, B, _, B, B, B, _, B, B},
+	{ w, _, _, _, w, _, _, _, _, _, _, _, _, _, _, B},
+	{ w, _, w, _, _, _, _, _, _, _, _, _, _, _, _, _},
+	{ w, _, w, _, w, w, w, _, _, _, _, _, _, _, _, B},
+	{ _, _, w, _, w, _, _, _, _, _, _, _, _, _, _, B},
+	{ w, _, _, _, _, _, _, _, _, _, _, _, _, _, _, B},
+	{ w, _, w, _, W, W, W, W, W, W, W, _, _, _, _, _},
+	{ w, _, w, _, W, D, D, D, D, D, W, _, _, _, _, B},
+	{ _, _, _, _, W, D, T, T, T, D, W, _, _, _, _, B},
+	{ _, _, _, _, W, D, T, H, T, D, W, _, _, _, _, B},
+	{s3,s2,s1, _, W, D, T, T, T, D, W, _, _, _, _, _},
+	{s4,s5,s6, _, W, D, D, D, D, D, W, _, _, _, _, B},
+	{s9,s8,s7, _, W, W, W, W, W, W, W, _, _, _, _, B},
+	{ _, _, _, _, _, _, _, _, _, _, _, B, B, B, _, B},
 };
 #undef _
 #undef w
 #undef D
 #undef T
 #undef H
+#undef s1
+#undef s2
+#undef s3
+#undef s4
+#undef s5
+#undef s6
+#undef s7
+#undef s8
+#undef s9
 
 // Variables
 SDL_Window *window;
