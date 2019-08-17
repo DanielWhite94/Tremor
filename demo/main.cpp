@@ -14,16 +14,17 @@ using namespace RayCast;
 const unsigned long long microsPerS=1000000llu;
 
 // Parameters
-const int windowWidth=1280;
-const int windowHeight=960;
+const int windowWidth=640;
+const int windowHeight=480;
 
-const double fps=60.0;
+const double fps=30.0;
 
 const double moveSpeed=0.07;
 const double turnSpeed=M_PI/100.0;
 const unsigned long long jumpTime=1000000llu;
+const double standHeight=0.5; // actual height when standing, fraction of unit block height - should be 0.5 for best graphics
+const double crouchHeight=0.3; // actual height when crouched, fraction of unit block height
 const double jumpHeight=0.3; // max vertical displacement
-const double crouchHeight=0.3; // actual height when crouched, compared to 0.5 standing
 
 Camera camera(-5.928415,10.382321,0.500000,6.261246);
 
@@ -209,8 +210,8 @@ void demoPhysicsTick(void) {
 		jumpStartTime=demoGetTimeMicro();
 	}
 
-	// Reset camera z value, but we may update this before we return.
-	camera.setZ(0.5);
+	// Reset camera z value for standing, but we may update this before we return.
+	camera.setZ(standHeight);
 
 	// Crouching logic
 	if (isCrouching)
@@ -227,7 +228,7 @@ void demoPhysicsTick(void) {
 			// Otherwise update camera Z value based on how far through jump we are
 			double jumpTimeFraction=((double)timeDelta)/jumpTime;
 			double currJumpHeight=sin(jumpTimeFraction*M_PI)*jumpHeight;
-			camera.setZ(0.5+currJumpHeight);
+			camera.setZ(standHeight+currJumpHeight);
 		}
 	}
 
