@@ -40,7 +40,6 @@ namespace RayCast {
 		int windowHeight;
 		GetBlockInfoFunctor *getBlockInfoFunctor;
 
-		const double blockBaseHeight=64;
 		Colour colourBg, colourGround, colourSky;
 
 		static int computeDisplayHeight(const double &blockHeight, const double &distance);

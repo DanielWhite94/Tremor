@@ -38,7 +38,7 @@ namespace RayCast {
 		int y;
 		for(y=0;y<windowHeight/2;++y) {
 			// Calculate distance in order to adjust colour.
-			double distance=blockBaseHeight/(windowHeight-2*y);
+			double distance=unitBlockHeight/(windowHeight-2*y);
 			Colour colour;
 
 			// Sky
