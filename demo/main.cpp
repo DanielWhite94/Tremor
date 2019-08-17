@@ -21,6 +21,8 @@ const double fps=60.0;
 
 const double moveSpeed=0.07;
 const double turnSpeed=M_PI/100.0;
+const unsigned long long jumpTime=1000000llu;
+const double jumpHeight=0.3;
 
 Camera camera(0.730000,15.520000,0.5,4.690450);
 
@@ -62,6 +64,9 @@ SDL_Window *window;
 SDL_Renderer *sdlRenderer;
 
 Renderer *renderer=NULL;
+
+bool isJumping=false;
+unsigned long long jumpStartTime;
 
 // Functions
 void demoInit(void);
@@ -173,6 +178,28 @@ void demoPhysicsTick(void) {
 	if (state[SDL_SCANCODE_S])
 		camera.move(-trueMoveSpeed);
 
+	if (state[SDL_SCANCODE_SPACE] && !isJumping) {
+		isJumping=true;
+		jumpStartTime=demoGetTimeMicro();
+	}
+
+	// Jumping logic
+	if (isJumping) {
+		unsigned long long timeDelta=demoGetTimeMicro()-jumpStartTime;
+
+		// Finished jumping?
+		if (timeDelta>=jumpTime) {
+			isJumping=false;
+			camera.setZ(0.5);
+		} else {
+			// Otherwise update camera Z value based on how far through jump we are
+			double jumpTimeFraction=((double)timeDelta)/jumpTime;
+			double currJumpHeight=sin(jumpTimeFraction*M_PI)*jumpHeight;
+			camera.setZ(0.5+currJumpHeight);
+		}
+	}
+
+	// Print position for debugging
 	printf("camera (x,y,z,angle)=(%f,%f,%f,%f)\n", camera.getX(), camera.getY(), camera.getZ(), camera.getAngle());
 }
 
