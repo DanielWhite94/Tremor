@@ -2,9 +2,10 @@
 
 namespace RayCast {
 
-	Camera::Camera(double X, double Y, double Angle, double Fov, double MaxDist) {
+	Camera::Camera(double X, double Y, double Z, double Angle, double Fov, double MaxDist) {
 		x=X;
 		y=Y;
+		z=Z;
 		angle=Angle;
 		fov=Fov;
 		maxDist=MaxDist;
@@ -16,6 +17,10 @@ namespace RayCast {
 
 	double Camera::getY(void) const {
 		return y;
+	}
+
+	double Camera::getZ(void) const {
+		return z;
 	}
 
 	double Camera::getAngle(void) const {
@@ -36,6 +41,10 @@ namespace RayCast {
 
 	void Camera::setY(double newY) {
 		y=newY;
+	}
+
+	void Camera::setZ(double newZ) {
+		z=newZ;
 	}
 
 	void Camera::setAngle(double newAngle) {

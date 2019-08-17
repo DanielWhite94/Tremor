@@ -22,7 +22,7 @@ const double fps=60.0;
 const double moveSpeed=0.07;
 const double turnSpeed=M_PI/100.0;
 
-Camera camera(0.77,15.99,5.323);
+Camera camera(0.730000,15.520000,0.5,4.690450);
 
 #define MapW 16
 #define MapH 16
@@ -173,7 +173,7 @@ void demoPhysicsTick(void) {
 	if (state[SDL_SCANCODE_S])
 		camera.move(-trueMoveSpeed);
 
-	// printf("camera (x,y,angle)=(%.2f,%.2f,%.3f)\n", camera.getX(), camera.getY(), camera.getAngle());
+	printf("camera (x,y,z,angle)=(%f,%f,%f,%f)\n", camera.getX(), camera.getY(), camera.getZ(), camera.getAngle());
 }
 
 void demoRedraw(void) {
