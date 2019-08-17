@@ -22,7 +22,8 @@ const double fps=60.0;
 const double moveSpeed=0.07;
 const double turnSpeed=M_PI/100.0;
 const unsigned long long jumpTime=1000000llu;
-const double jumpHeight=0.3;
+const double jumpHeight=0.3; // max vertical displacement
+const double crouchHeight=0.3; // actual height when crouched, compared to 0.5 standing
 
 Camera camera(0.730000,15.520000,0.5,4.690450);
 
@@ -65,6 +66,7 @@ SDL_Renderer *sdlRenderer;
 
 Renderer *renderer=NULL;
 
+bool isCrouching=false;
 bool isJumping=false;
 unsigned long long jumpStartTime;
 
@@ -166,7 +168,7 @@ void demoPhysicsTick(void) {
 	const Uint8 *state=SDL_GetKeyboardState(NULL);
 
 	double trueMoveSpeed=moveSpeed;
-	if (state[SDL_SCANCODE_LSHIFT])
+	if (state[SDL_SCANCODE_LSHIFT] && !isCrouching)
 		trueMoveSpeed*=2;
 
 	if (state[SDL_SCANCODE_A])
@@ -178,20 +180,32 @@ void demoPhysicsTick(void) {
 	if (state[SDL_SCANCODE_S])
 		camera.move(-trueMoveSpeed);
 
+	if (state[SDL_SCANCODE_LCTRL]) {
+		if (!isJumping)
+			isCrouching=true;
+	} else
+		isCrouching=false;
+
 	if (state[SDL_SCANCODE_SPACE] && !isJumping) {
 		isJumping=true;
 		jumpStartTime=demoGetTimeMicro();
 	}
+
+	// Reset camera z value, but we may update this before we return.
+	camera.setZ(0.5);
+
+	// Crouching logic
+	if (isCrouching)
+		camera.setZ(crouchHeight);
 
 	// Jumping logic
 	if (isJumping) {
 		unsigned long long timeDelta=demoGetTimeMicro()-jumpStartTime;
 
 		// Finished jumping?
-		if (timeDelta>=jumpTime) {
+		if (timeDelta>=jumpTime)
 			isJumping=false;
-			camera.setZ(0.5);
-		} else {
+		else {
 			// Otherwise update camera Z value based on how far through jump we are
 			double jumpTimeFraction=((double)timeDelta)/jumpTime;
 			double currJumpHeight=sin(jumpTimeFraction*M_PI)*jumpHeight;
