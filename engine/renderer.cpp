@@ -29,6 +29,8 @@ namespace RayCast {
 		// Calculate various useful values.
 		double screenDist=windowWidth/(2*tan(camera.getFov()/2));
 
+		int cameraZScreenAdjustment=(camera.getZ()-0.5)*unitBlockHeight;
+
 		// Clear surface.
 		SDL_SetRenderDrawColor(renderer, colourBg.r, colourBg.g, colourBg.b, 255);
 		SDL_Rect rect={0, 0, windowWidth, windowHeight};
@@ -88,6 +90,9 @@ namespace RayCast {
 
 				int unitBlockDisplayHeight=this->computeDisplayHeight(unitBlockHeight, slices[slicesNext].distance);
 				slices[slicesNext].blockDisplayBase=(windowHeight+unitBlockDisplayHeight)/2;
+
+				double cameraZDistanceFactor=1.0/slices[slicesNext].distance;
+				slices[slicesNext].blockDisplayBase+=cameraZDistanceFactor*cameraZScreenAdjustment;
 
 				double blockTrueHeight=slices[slicesNext].blockInfo.height*unitBlockHeight;
 				slices[slicesNext].blockDisplayHeight=this->computeDisplayHeight(blockTrueHeight, slices[slicesNext].distance);
