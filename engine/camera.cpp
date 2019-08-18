@@ -2,11 +2,12 @@
 
 namespace RayCast {
 
-	Camera::Camera(double X, double Y, double Z, double Angle, double Fov, double MaxDist) {
+	Camera::Camera(double X, double Y, double Z, double Yaw, double Pitch, double Fov, double MaxDist) {
 		x=X;
 		y=Y;
 		z=Z;
-		angle=Angle;
+		yaw=Yaw;
+		pitch=Pitch;
 		fov=Fov;
 		maxDist=MaxDist;
 	}
@@ -23,8 +24,12 @@ namespace RayCast {
 		return z;
 	}
 
-	double Camera::getAngle(void) const {
-		return angle;
+	double Camera::getYaw(void) const {
+		return yaw;
+	}
+
+	double Camera::getPitch(void) const {
+		return pitch;
 	}
 
 	double Camera::getFov(void) const {
@@ -47,16 +52,20 @@ namespace RayCast {
 		z=newZ;
 	}
 
-	void Camera::setAngle(double newAngle) {
-		angle=newAngle;
+	void Camera::setYaw(double newYaw) {
+		yaw=newYaw;
+	}
+
+	void Camera::setPitch(double newPitch) {
+		pitch=newPitch;
 	}
 
 	void Camera::move(double delta) {
-		x+=cos(angle)*delta;
-		y+=sin(angle)*delta;
+		x+=cos(yaw)*delta;
+		y+=sin(yaw)*delta;
 	}
 
 	void Camera::turn(double delta) {
-		angle+=delta;
+		yaw+=delta;
 	}
 };

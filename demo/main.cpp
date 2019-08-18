@@ -271,7 +271,7 @@ void demoPhysicsTick(void) {
 	}
 
 	// Print position for debugging
-	printf("camera (x,y,z,angle)=(%f,%f,%f,%f)\n", camera.getX(), camera.getY(), camera.getZ(), camera.getAngle());
+	printf("camera (x,y,z,yaw,pitch)=(%f,%f,%f,%f,%f)\n", camera.getX(), camera.getY(), camera.getZ(), camera.getYaw(), camera.getPitch());
 }
 
 void demoRedraw(void) {

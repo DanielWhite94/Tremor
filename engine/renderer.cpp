@@ -60,7 +60,7 @@ namespace RayCast {
 		for(x=0;x<windowWidth;++x) {
 			// Trace ray from view point at this angle to collect a list of 'slices' of blocks to later draw.
 			double deltaAngle=atan((x-windowWidth/2)/screenDist);
-			double angle=camera.getAngle()+deltaAngle;
+			double angle=camera.getYaw()+deltaAngle;
 			Ray ray(camera.getX(), camera.getY(), angle);
 
 			#define SlicesMax 64
@@ -207,7 +207,7 @@ namespace RayCast {
 			SDL_RenderDrawLine(renderer, xOffset, SY(y), windowWidth/divisor+xOffset, SY(y));
 
 		// Trace ray and highlight cells it intersects
-		Ray ray(camera.getX(), camera.getY(), camera.getAngle());
+		Ray ray(camera.getX(), camera.getY(), camera.getYaw());
 		int i;
 		for(i=0;i<64;++i) {
 			x=ray.getMapX();
@@ -235,7 +235,7 @@ namespace RayCast {
 		// Draw camera's line of sight
 		SDL_SetRenderDrawColor(renderer, 0, 255, 0, 255);
 		double len=64.0;
-		SDL_RenderDrawLine(renderer, SX(camera.getX()), SY(camera.getY()), SX(camera.getX()+cos(camera.getAngle())*len), SY(camera.getY()+sin(camera.getAngle())*len));
+		SDL_RenderDrawLine(renderer, SX(camera.getX()), SY(camera.getY()), SX(camera.getX()+cos(camera.getYaw())*len), SY(camera.getY()+sin(camera.getYaw())*len));
 
 		#undef SX
 		#undef SY
