@@ -48,7 +48,10 @@ namespace RayCast {
 
 		Colour colourBg, colourGround, colourSky;
 
-		static int computeDisplayHeight(const double &blockHeight, const double &distance);
+		static const double unitBlockHeight; // increasing this will stretch blocks to be larger vertically relative to their width, decreasing will shrink them
+
+		int computeBlockDisplayBase(double distance, int cameraZScreenAdjustment);
+		int computeBlockDisplayHeight(double blockHeightFraction, double distance);
 
 		double colourDistanceFactor(double distance) const ;
 		void colourAdjustForDistance(Colour &colour, double distance) const ;

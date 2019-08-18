@@ -7,6 +7,7 @@
 #include "renderer.h"
 
 namespace RayCast {
+	const double Renderer::unitBlockHeight=512.0;
 
 	Renderer::Renderer(SDL_Renderer *grenderer, int gwindowWidth, int gwindowHeight, GetBlockInfoFunctor *ggetBlockInfoFunctor) {
 		renderer=grenderer;
@@ -23,9 +24,6 @@ namespace RayCast {
 	}
 
 	void Renderer::render(const Camera &camera) {
-		// Parameters
-		const double unitBlockHeight=512.0; // increasing this will stretch blocks to be larger vertically relative to their width, decreasing will shrink them
-
 		// Calculate various useful values.
 		double screenDist=windowWidth/(2*tan(camera.getFov()/2));
 
@@ -82,16 +80,8 @@ namespace RayCast {
 				// We have already added blockInfo to slice stack, so add and compute other fields now.
 				slices[slicesNext].distance=ray.getTrueDistance();
 				slices[slicesNext].intersectionSide=ray.getSide();
-
-				int unitBlockDisplayHeight=this->computeDisplayHeight(unitBlockHeight, slices[slicesNext].distance);
-				slices[slicesNext].blockDisplayBase=(windowHeight+unitBlockDisplayHeight)/2;
-
-				double cameraZDistanceFactor=1.0/slices[slicesNext].distance;
-				slices[slicesNext].blockDisplayBase+=cameraZDistanceFactor*cameraZScreenAdjustment;
-
-				double blockTrueHeight=slices[slicesNext].blockInfo.height*unitBlockHeight;
-				slices[slicesNext].blockDisplayHeight=this->computeDisplayHeight(blockTrueHeight, slices[slicesNext].distance);
-
+				slices[slicesNext].blockDisplayBase=computeBlockDisplayBase(slices[slicesNext].distance, cameraZScreenAdjustment);
+				slices[slicesNext].blockDisplayHeight=computeBlockDisplayHeight(slices[slicesNext].blockInfo.height, slices[slicesNext].distance);
 				if (slices[slicesNext].blockInfo.texture!=NULL) {
 					int textureW;
 					SDL_QueryTexture(slices[slicesNext].blockInfo.texture, NULL, NULL, &textureW, NULL);
@@ -112,16 +102,8 @@ namespace RayCast {
 				int blockDisplayTop=slices[slicesNext].blockDisplayBase-slices[slicesNext].blockDisplayHeight;
 				if (blockDisplayTop>windowHeight/2) {
 					double nextDistance=ray.getTrueDistance();
-
-					int unitNextBlockDisplayHeight=this->computeDisplayHeight(unitBlockHeight, nextDistance);
-					int nextBlockDisplayBase=(windowHeight+unitNextBlockDisplayHeight)/2;
-
-					double nextCameraZDistanceFactor=1.0/nextDistance;
-					nextBlockDisplayBase+=nextCameraZDistanceFactor*cameraZScreenAdjustment;
-
-					double nextBlockTrueHeight=slices[slicesNext].blockInfo.height*unitBlockHeight;
-					int nextBlockDisplayHeight=this->computeDisplayHeight(nextBlockTrueHeight, nextDistance);
-
+					int nextBlockDisplayBase=computeBlockDisplayBase(nextDistance, cameraZScreenAdjustment);
+					int nextBlockDisplayHeight=computeBlockDisplayHeight(slices[slicesNext].blockInfo.height, nextDistance);
 					int nextBlockDisplayTop=nextBlockDisplayBase-nextBlockDisplayHeight;
 					slices[slicesNext].blockDisplayTopSize=blockDisplayTop-nextBlockDisplayTop;
 				}
@@ -259,12 +241,17 @@ namespace RayCast {
 		#undef SY
 	}
 
-	int Renderer::computeDisplayHeight(const double &blockHeight, const double &distance) {
-		return (distance>0 ? blockHeight/distance : std::numeric_limits<double>::max());
+	int Renderer::computeBlockDisplayBase(double distance, int cameraZScreenAdjustment) {
+		int unitBlockDisplayHeight=computeBlockDisplayHeight(1.0, distance);
+		return (windowHeight+unitBlockDisplayHeight)/2+cameraZScreenAdjustment/distance;
+	}
+
+	int Renderer::computeBlockDisplayHeight(double blockHeightFraction, double distance) {
+		return (distance>0.0 ? (blockHeightFraction*unitBlockHeight)/distance : std::numeric_limits<double>::max());
 	}
 
 	double Renderer::colourDistanceFactor(double distance) const {
-		return (distance>=1 ? 1/sqrt(distance) : 1);
+		return (distance>1.0 ? 1.0/sqrt(distance) : 1.0);
 	}
 
 	void Renderer::colourAdjustForDistance(Colour &colour, double distance) const {
