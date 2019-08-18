@@ -32,10 +32,11 @@ const double jumpHeight=0.3; // max vertical displacement
 
 Camera camera(-5.928415,10.382321,0.500000,6.261246);
 
+// Create test map - note that texture pointers are filled in later in demoInit.
 #define MapW 16
 #define MapH 16
 #define _ {.height=0.0, .texture=NULL}
-#define w {.height=1.1, .colour={.r=128, .g=128, .b=128}, .texture=NULL} // colour later replaced with wall1 texture
+#define w {.height=1.1, .colour={.r=128, .g=128, .b=128}, .texture=NULL}
 #define W {.height=0.7, .colour={.r=120, .g=120, .b=120}, .texture=NULL}
 #define D {.height=1.4, .colour={.r=120, .g=120, .b=120}, .texture=NULL}
 #define T {.height=2.1, .colour={.r=120, .g=120, .b=120}, .texture=NULL}
