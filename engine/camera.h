@@ -24,6 +24,7 @@ namespace RayCast {
 		void setPitch(double newYaw); // limited to interval (-pi/2,pi/2)
 
 		void move(double delta); // Move in current direction (or backwards if delta is negative).
+		void strafe(double delta); // Move perpendicular to direction (left is delta is negative, right if positive).
 		void turn(double delta); // adjust yaw
 		void pitch(double delta); // adjust pitch
 	private:

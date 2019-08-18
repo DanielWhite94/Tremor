@@ -71,6 +71,11 @@ namespace RayCast {
 		y+=sin(yaw)*delta;
 	}
 
+	void Camera::strafe(double delta) {
+		x+=-sin(yaw)*delta;
+		y+=cos(yaw)*delta;
+	}
+
 	void Camera::turn(double delta) {
 		yaw+=delta;
 	}
