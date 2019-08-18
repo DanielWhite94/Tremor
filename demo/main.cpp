@@ -5,6 +5,7 @@
 #include <unistd.h>
 
 #include <SDL2/SDL.h>
+#include <SDL2/SDL_image.h>
 
 #include "../engine/camera.h"
 #include "../engine/renderer.h"
@@ -31,23 +32,23 @@ Camera camera(-5.928415,10.382321,0.500000,6.261246);
 
 #define MapW 16
 #define MapH 16
-#define _ {.height=0.0}
-#define w {.height=1.0, .colour={.r=128, .g=128, .b=128}}
-#define W {.height=0.7, .colour={.r=235, .g=158, .b=52}}
-#define D {.height=1.4, .colour={.r=235, .g=170, .b=52}}
-#define T {.height=2.1, .colour={.r=235, .g=200, .b=52}}
-#define H {.height=2.8, .colour={.r=235, .g=232, .b=52}}
-#define B {.height=1.5, .colour={.r=235, .g=50, .b=52}}
-#define s1 {.height=0.1, .colour={.r=177, .g=3, .b=252}}
-#define s2 {.height=0.2, .colour={.r=177, .g=3, .b=252}}
-#define s3 {.height=0.3, .colour={.r=177, .g=3, .b=252}}
-#define s4 {.height=0.4, .colour={.r=177, .g=3, .b=252}}
-#define s5 {.height=0.5, .colour={.r=177, .g=3, .b=252}}
-#define s6 {.height=0.6, .colour={.r=177, .g=3, .b=252}}
-#define s7 {.height=0.7, .colour={.r=177, .g=3, .b=252}}
-#define s8 {.height=0.8, .colour={.r=177, .g=3, .b=252}}
-#define s9 {.height=0.9, .colour={.r=177, .g=3, .b=252}}
-const Renderer::BlockInfo map[MapH][MapW]={
+#define _ {.height=0.0, .texture=NULL}
+#define w {.height=1.1, .colour={.r=128, .g=128, .b=128}, .texture=NULL} // colour later replaced with wall1 texture
+#define W {.height=0.7, .colour={.r=235, .g=158, .b=52}, .texture=NULL}
+#define D {.height=1.4, .colour={.r=235, .g=170, .b=52}, .texture=NULL}
+#define T {.height=2.1, .colour={.r=235, .g=200, .b=52}, .texture=NULL}
+#define H {.height=2.8, .colour={.r=235, .g=232, .b=52}, .texture=NULL}
+#define B {.height=1.5, .colour={.r=235, .g=50, .b=52}, .texture=NULL}
+#define s1 {.height=0.1, .colour={.r=177, .g=3, .b=252}, .texture=NULL}
+#define s2 {.height=0.2, .colour={.r=177, .g=3, .b=252}, .texture=NULL}
+#define s3 {.height=0.3, .colour={.r=177, .g=3, .b=252}, .texture=NULL}
+#define s4 {.height=0.4, .colour={.r=177, .g=3, .b=252}, .texture=NULL}
+#define s5 {.height=0.5, .colour={.r=177, .g=3, .b=252}, .texture=NULL}
+#define s6 {.height=0.6, .colour={.r=177, .g=3, .b=252}, .texture=NULL}
+#define s7 {.height=0.7, .colour={.r=177, .g=3, .b=252}, .texture=NULL}
+#define s8 {.height=0.8, .colour={.r=177, .g=3, .b=252}, .texture=NULL}
+#define s9 {.height=0.9, .colour={.r=177, .g=3, .b=252}, .texture=NULL}
+Renderer::BlockInfo map[MapH][MapW]={
 	{ W, W, W, _, _, _, _, _, _, _, _, _, _, _, _, _},
 	{ _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _},
 	{ w, w, w, _, w, _, B, B, B, _, B, B, B, _, B, B},
@@ -89,6 +90,8 @@ Renderer *renderer=NULL;
 bool isCrouching=false;
 bool isJumping=false;
 unsigned long long jumpStartTime;
+
+SDL_Texture *textureWall1=NULL;
 
 // Functions
 void demoInit(void);
@@ -156,12 +159,27 @@ void demoInit(void) {
 		exit(EXIT_FAILURE);
 	}
 
+	// Load textures
+	textureWall1=IMG_LoadTexture(sdlRenderer, "demo/wall1.png");
+	if (textureWall1==NULL) {
+		printf("Could not created load texture at '%s': %s\n", "demo/wall1.png", SDL_GetError());
+		exit(EXIT_FAILURE);
+	}
+
+	// Update map with textures
+	for(unsigned i=0; i<MapH; ++i)
+		for(unsigned j=0; j<MapW; ++j)
+			if (map[i][j].height==1.1)
+				map[i][j].texture=textureWall1;
+
 	// Create ray casting renderer
 	renderer=new Renderer(sdlRenderer, windowWidth, windowHeight, &demoGetBlockInfoFunctor);
 }
 
 void demoQuit(void) {
 	delete renderer;
+
+	SDL_DestroyTexture(textureWall1);
 
 	SDL_DestroyRenderer(sdlRenderer);
 	sdlRenderer=NULL;
@@ -264,6 +282,7 @@ bool demoGetBlockInfoFunctor(int mapX, int mapY, Renderer::BlockInfo *info) {
 		info->colour.r=64;
 		info->colour.g=64;
 		info->colour.b=64;
+		info->texture=NULL;
 		return true;
 	}
 

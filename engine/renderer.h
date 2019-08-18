@@ -2,6 +2,7 @@
 #define RAYCAST_RENDERER_H
 
 #include <SDL2/SDL.h>
+#include <SDL2/SDL_image.h>
 
 #include "camera.h"
 #include "colour.h"
@@ -13,7 +14,8 @@ namespace RayCast {
 	public:
 		struct BlockInfo {
 			double height;
-			Colour colour;
+			Colour colour; // should always be set - used for top of block at the very least
+			SDL_Texture *texture; // texture for block walls, if NULL then colour is used instead
 		};
 
 		typedef bool (GetBlockInfoFunctor)(int mapX, int mapY, BlockInfo *info); // should return false if no such block
@@ -33,6 +35,8 @@ namespace RayCast {
 			int blockDisplayHeight;
 
 			int blockDisplayTopSize; // only defined if top is visible
+
+			int blockTextureX; // only defined if block's texture!=NULL
 
 			BlockInfo blockInfo;
 		};

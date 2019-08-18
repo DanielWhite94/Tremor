@@ -91,8 +91,12 @@ namespace RayCast {
 
 				double blockTrueHeight=slices[slicesNext].blockInfo.height*unitBlockHeight;
 				slices[slicesNext].blockDisplayHeight=this->computeDisplayHeight(blockTrueHeight, slices[slicesNext].distance);
-				if (slices[slicesNext].blockDisplayBase-slices[slicesNext].blockDisplayHeight<0)
-					slices[slicesNext].blockDisplayHeight=slices[slicesNext].blockDisplayBase;
+
+				if (slices[slicesNext].blockInfo.texture!=NULL) {
+					int textureW;
+					SDL_QueryTexture(slices[slicesNext].blockInfo.texture, NULL, NULL, &textureW, NULL);
+					slices[slicesNext].blockTextureX=ray.getTextureX(textureW);
+				}
 
 				// If this block occupies whole column already, no point searching further.
 				// FIXME: this logic will break if we end up supporting mapping textures with transparency onto blocks
@@ -117,8 +121,6 @@ namespace RayCast {
 
 					double nextBlockTrueHeight=slices[slicesNext].blockInfo.height*unitBlockHeight;
 					int nextBlockDisplayHeight=this->computeDisplayHeight(nextBlockTrueHeight, nextDistance);
-					if (nextBlockDisplayBase-nextBlockDisplayHeight<0)
-						nextBlockDisplayHeight=nextBlockDisplayBase;
 
 					int nextBlockDisplayTop=nextBlockDisplayBase-nextBlockDisplayHeight;
 					slices[slicesNext].blockDisplayTopSize=blockDisplayTop-nextBlockDisplayTop;
@@ -133,15 +135,30 @@ namespace RayCast {
 				// Adjust slicesNext now due to how it usually points one beyond last entry
 				--slicesNext;
 
-				// Calculate display colour for block
-				Colour blockDisplayColour=slices[slicesNext].blockInfo.colour;
-				if (slices[slicesNext].intersectionSide==Ray::Side::Horizontal)
-					blockDisplayColour.mul(0.7); // make edges/corners between horizontal and vertical walls clearer
-				colourAdjustForDistance(blockDisplayColour, slices[slicesNext].distance);
-
 				// Draw block
-				SDL_SetRenderDrawColor(renderer, blockDisplayColour.r, blockDisplayColour.g, blockDisplayColour.b, 255);
-				SDL_RenderDrawLine(renderer, x, slices[slicesNext].blockDisplayBase-slices[slicesNext].blockDisplayHeight, x, slices[slicesNext].blockDisplayBase);
+				if (slices[slicesNext].blockInfo.texture!=NULL) {
+					// Textured block
+					// Note: we always ask the renderer to draw the whole slice - even if say we are very close to a block and so most of the slice is not visible anyway - hoping that it interally optimises the blit.
+
+					int textureW, textureH;
+					SDL_QueryTexture(slices[slicesNext].blockInfo.texture, NULL, NULL, &textureW, &textureH);
+
+					SDL_Rect srcRect={.x=slices[slicesNext].blockTextureX, .y=0, .w=1, .h=textureH};
+					SDL_Rect destRect={.x=x, .y=slices[slicesNext].blockDisplayBase-slices[slicesNext].blockDisplayHeight, .w=1, .h=slices[slicesNext].blockDisplayHeight};
+					SDL_RenderCopy(renderer, slices[slicesNext].blockInfo.texture, &srcRect, &destRect);
+				} else {
+					// Solid colour block
+
+					// Calculate display colour for block
+					Colour blockDisplayColour=slices[slicesNext].blockInfo.colour;
+					if (slices[slicesNext].intersectionSide==Ray::Side::Horizontal)
+						blockDisplayColour.mul(0.7); // make edges/corners between horizontal and vertical walls clearer
+					colourAdjustForDistance(blockDisplayColour, slices[slicesNext].distance);
+
+					// Draw block
+					SDL_SetRenderDrawColor(renderer, blockDisplayColour.r, blockDisplayColour.g, blockDisplayColour.b, 255);
+					SDL_RenderDrawLine(renderer, x, slices[slicesNext].blockDisplayBase-slices[slicesNext].blockDisplayHeight, x, slices[slicesNext].blockDisplayBase);
+				}
 
 				// Do we need to draw top of this block? (because it is below the horizon)
 				int blockDisplayTop=slices[slicesNext].blockDisplayBase-slices[slicesNext].blockDisplayHeight;
