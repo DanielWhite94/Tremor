@@ -189,7 +189,8 @@ void demoInit(void) {
 		}
 
 	// Create ray casting renderer
-	renderer=new Renderer(sdlRenderer, windowWidth, windowHeight, &demoGetBlockInfoFunctor);
+	double unitBlockHeight=(512.0*windowWidth)/640.0;
+	renderer=new Renderer(sdlRenderer, windowWidth, windowHeight, &demoGetBlockInfoFunctor, unitBlockHeight);
 }
 
 void demoQuit(void) {
