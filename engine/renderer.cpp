@@ -143,6 +143,9 @@ namespace RayCast {
 					int textureW, textureH;
 					SDL_QueryTexture(slices[slicesNext].blockInfo.texture, NULL, NULL, &textureW, &textureH);
 
+					uint8_t colourMod=(slices[slicesNext].intersectionSide==Ray::Side::Horizontal ? 153 : 255);
+					SDL_SetTextureColorMod(slices[slicesNext].blockInfo.texture, colourMod, colourMod, colourMod); // make edges/corners between horizontal and vertical walls clearer
+
 					SDL_Rect srcRect={.x=slices[slicesNext].blockTextureX, .y=0, .w=1, .h=textureH};
 					SDL_Rect destRect={.x=x, .y=slices[slicesNext].blockDisplayBase-slices[slicesNext].blockDisplayHeight, .w=1, .h=slices[slicesNext].blockDisplayHeight};
 					SDL_RenderCopy(renderer, slices[slicesNext].blockInfo.texture, &srcRect, &destRect);
@@ -152,7 +155,7 @@ namespace RayCast {
 					// Calculate display colour for block
 					Colour blockDisplayColour=slices[slicesNext].blockInfo.colour;
 					if (slices[slicesNext].intersectionSide==Ray::Side::Horizontal)
-						blockDisplayColour.mul(0.7); // make edges/corners between horizontal and vertical walls clearer
+						blockDisplayColour.mul(0.6); // make edges/corners between horizontal and vertical walls clearer
 					colourAdjustForDistance(blockDisplayColour, slices[slicesNext].distance);
 
 					// Draw block
