@@ -50,7 +50,7 @@ namespace RayCast {
 
 		static const double unitBlockHeight; // increasing this will stretch blocks to be larger vertically relative to their width, decreasing will shrink them
 
-		int computeBlockDisplayBase(double distance, int cameraZScreenAdjustment);
+		int computeBlockDisplayBase(double distance, int cameraZScreenAdjustment, int cameraPitchScreenAdjustment);
 		int computeBlockDisplayHeight(double blockHeightFraction, double distance);
 
 		double colourDistanceFactor(double distance) const ;

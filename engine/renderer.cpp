@@ -29,6 +29,15 @@ namespace RayCast {
 
 		int cameraZScreenAdjustment=(camera.getZ()-0.5)*unitBlockHeight;
 
+		double cameraPitchScreenAdjustmentDouble=tan(camera.getPitch())*screenDist;
+		if (cameraPitchScreenAdjustmentDouble>windowHeight)
+			cameraPitchScreenAdjustmentDouble=windowHeight;
+		if (cameraPitchScreenAdjustmentDouble<-windowHeight)
+			cameraPitchScreenAdjustmentDouble=-windowHeight;
+		int cameraPitchScreenAdjustment=cameraPitchScreenAdjustmentDouble;
+
+		int horizonHeight=windowHeight/2+cameraPitchScreenAdjustment;
+
 		// Clear surface.
 		SDL_SetRenderDrawColor(renderer, colourBg.r, colourBg.g, colourBg.b, 255);
 		SDL_Rect rect={0, 0, windowWidth, windowHeight};
@@ -36,22 +45,28 @@ namespace RayCast {
 
 		// Draw sky and ground.
 		int y;
-		for(y=0;y<windowHeight/2;++y) {
-			// Calculate distance in order to adjust colour.
-			double distance=unitBlockHeight/(windowHeight-2*y);
+		for(y=0;y<windowHeight;++y) {
 			Colour colour;
 
-			// Sky
-			colour=colourSky;
-			colourAdjustForDistance(colour, distance);
-			SDL_SetRenderDrawColor(renderer, colour.r, colour.g, colour.b, 255);
-			SDL_RenderDrawLine(renderer, 0, y, windowWidth, y);
+			if (y<horizonHeight) {
+				// Calculate distance in order to adjust colour.
+				double distance=unitBlockHeight/(2*(horizonHeight-y));
 
-			// Ground
-			colour=colourGround;
-			colourAdjustForDistance(colour, distance);
-			SDL_SetRenderDrawColor(renderer, colour.r, colour.g, colour.b, 255);
-			SDL_RenderDrawLine(renderer, 0, windowHeight-1-y, windowWidth, windowHeight-1-y);
+				// Sky
+				colour=colourSky;
+				colourAdjustForDistance(colour, distance);
+				SDL_SetRenderDrawColor(renderer, colour.r, colour.g, colour.b, 255);
+				SDL_RenderDrawLine(renderer, 0, y, windowWidth, y);
+			} else {
+				// Calculate distance in order to adjust colour.
+				double distance=unitBlockHeight/(2*(y-horizonHeight));
+
+				// Ground
+				colour=colourGround;
+				colourAdjustForDistance(colour, distance);
+				SDL_SetRenderDrawColor(renderer, colour.r, colour.g, colour.b, 255);
+				SDL_RenderDrawLine(renderer, 0, y, windowWidth, y);
+			}
 		}
 
 		// Draw blocks.
@@ -80,7 +95,7 @@ namespace RayCast {
 				// We have already added blockInfo to slice stack, so add and compute other fields now.
 				slices[slicesNext].distance=ray.getTrueDistance();
 				slices[slicesNext].intersectionSide=ray.getSide();
-				slices[slicesNext].blockDisplayBase=computeBlockDisplayBase(slices[slicesNext].distance, cameraZScreenAdjustment);
+				slices[slicesNext].blockDisplayBase=computeBlockDisplayBase(slices[slicesNext].distance, cameraZScreenAdjustment, cameraPitchScreenAdjustment);
 				slices[slicesNext].blockDisplayHeight=computeBlockDisplayHeight(slices[slicesNext].blockInfo.height, slices[slicesNext].distance);
 				if (slices[slicesNext].blockInfo.texture!=NULL) {
 					int textureW;
@@ -100,9 +115,9 @@ namespace RayCast {
 
 				// If top of block is visible, compute some extra stuff.
 				int blockDisplayTop=slices[slicesNext].blockDisplayBase-slices[slicesNext].blockDisplayHeight;
-				if (blockDisplayTop>windowHeight/2) {
+				if (blockDisplayTop>horizonHeight) {
 					double nextDistance=ray.getTrueDistance();
-					int nextBlockDisplayBase=computeBlockDisplayBase(nextDistance, cameraZScreenAdjustment);
+					int nextBlockDisplayBase=computeBlockDisplayBase(nextDistance, cameraZScreenAdjustment, cameraPitchScreenAdjustment);
 					int nextBlockDisplayHeight=computeBlockDisplayHeight(slices[slicesNext].blockInfo.height, nextDistance);
 					int nextBlockDisplayTop=nextBlockDisplayBase-nextBlockDisplayHeight;
 					slices[slicesNext].blockDisplayTopSize=blockDisplayTop-nextBlockDisplayTop;
@@ -147,7 +162,7 @@ namespace RayCast {
 
 				// Do we need to draw top of this block? (because it is below the horizon)
 				int blockDisplayTop=slices[slicesNext].blockDisplayBase-slices[slicesNext].blockDisplayHeight;
-				if (blockDisplayTop>windowHeight/2) {
+				if (blockDisplayTop>horizonHeight) {
 					Colour blockTopDisplayColour=slices[slicesNext].blockInfo.colour;
 					blockTopDisplayColour.mul(1.05);
 					SDL_SetRenderDrawColor(renderer, blockTopDisplayColour.r, blockTopDisplayColour.g, blockTopDisplayColour.b, 255);
@@ -241,9 +256,9 @@ namespace RayCast {
 		#undef SY
 	}
 
-	int Renderer::computeBlockDisplayBase(double distance, int cameraZScreenAdjustment) {
+	int Renderer::computeBlockDisplayBase(double distance, int cameraZScreenAdjustment, int cameraPitchScreenAdjustment) {
 		int unitBlockDisplayHeight=computeBlockDisplayHeight(1.0, distance);
-		return (windowHeight+unitBlockDisplayHeight)/2+cameraZScreenAdjustment/distance;
+		return (windowHeight+unitBlockDisplayHeight)/2+cameraZScreenAdjustment/distance+cameraPitchScreenAdjustment;
 	}
 
 	int Renderer::computeBlockDisplayHeight(double blockHeightFraction, double distance) {
