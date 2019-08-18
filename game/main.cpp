@@ -1,10 +1,6 @@
 #include <cstdio>
 #include <cstdlib>
-#include <sys/time.h>
 #include <unistd.h>
-
-#include <SDL2/SDL.h>
-#include <SDL2/SDL_image.h>
 
 #include <engine.h>
 
