@@ -7,8 +7,7 @@
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
 
-#include "../engine/camera.h"
-#include "../engine/renderer.h"
+#include <engine.h>
 
 using namespace TremorEngine;
 

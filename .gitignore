@@ -4,5 +4,8 @@
 # Object files.
 *.o
 
+# Library files
+*.a
+
 # Executable
 main
