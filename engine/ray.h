@@ -31,6 +31,9 @@ namespace RayCast {
 		double deltaDistX, deltaDistY; // Length of ray from one x (or y) side to next x (or y) side.
 		int stepX, stepY; // What direction to step in x (or y) direction (either +1 or -1).
 		Side side;
+		double trueDistance; // perpendicular distance from ray start to last intersection
+
+		void updateTrueDistance(void);
 	};
 
 };

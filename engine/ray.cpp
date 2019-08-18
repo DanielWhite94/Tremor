@@ -35,6 +35,8 @@ namespace RayCast {
 		}
 
 		side=Side::None;
+
+		updateTrueDistance();
 	}
 
 	Ray::~Ray() {
@@ -50,6 +52,8 @@ namespace RayCast {
 			mapY+=stepY;
 			side=Side::Horizontal;
 		}
+
+		updateTrueDistance();
 	}
 
 	int Ray::getMapX(void) const {
@@ -61,20 +65,7 @@ namespace RayCast {
 	}
 
 	double Ray::getTrueDistance(void) const {
-		switch(side) {
-			case Side::Vertical:
-				return (rayDirX!=0 ? fabs((mapX-startX+(1-stepX)/2)/rayDirX) : std::numeric_limits<double>::max());
-			break;
-			case Side::Horizontal:
-				return (rayDirY!=0 ? fabs((mapY-startY+(1-stepY)/2)/rayDirY) : std::numeric_limits<double>::max());
-			break;
-			case Side::None:
-				return 0.0;
-			break;
-		}
-
-		assert(false);
-		return 0.0;
+		return trueDistance;
 	}
 
 	Ray::Side Ray::getSide(void) const {
@@ -103,5 +94,21 @@ namespace RayCast {
 			textureX=textureW-textureX-1;
 
 		return textureX;
+	}
+
+	void Ray::updateTrueDistance(void) {
+		trueDistance=0.0;
+
+		switch(side) {
+			case Side::Vertical:
+				trueDistance=(rayDirX!=0 ? fabs((mapX-startX+(1-stepX)/2)/rayDirX) : std::numeric_limits<double>::max());
+			break;
+			case Side::Horizontal:
+				trueDistance=(rayDirY!=0 ? fabs((mapY-startY+(1-stepY)/2)/rayDirY) : std::numeric_limits<double>::max());
+			break;
+			case Side::None:
+				trueDistance=0.0;
+			break;
+		}
 	}
 };
