@@ -24,7 +24,7 @@ namespace RayCast {
 
 	void Renderer::render(const Camera &camera) {
 		// Parameters
-		const double unitBlockHeight=1024.0; // increasing this will stretch blocks to be larger vertically relative to their width, decreasing will shrink them
+		const double unitBlockHeight=512.0; // increasing this will stretch blocks to be larger vertically relative to their width, decreasing will shrink them
 
 		// Calculate various useful values.
 		double screenDist=windowWidth/(2*tan(camera.getFov()/2));
