@@ -22,6 +22,7 @@ namespace RayCast {
 
 		Side getSide(void) const ; // Type of of last intersection
 
+		int getTextureX(int textureW) const; // return, as of last intersection, the x-offset into a texture rendered on this wall
 	private:
 		double startX, startY;
 		double rayDirX, rayDirY;

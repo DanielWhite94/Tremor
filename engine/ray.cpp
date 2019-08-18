@@ -84,4 +84,27 @@ namespace RayCast {
 		return side;
 	}
 
+	int Ray::getTextureX(int textureW) const {
+		double intersectionX;
+		switch(side) {
+			case Side::Vertical:
+				intersectionX=startY+getTrueDistance()*rayDirY;
+			break;
+			case Side::Horizontal:
+				intersectionX=startX+getTrueDistance()*rayDirX;
+			break;
+			case Side::None:
+				return 0; // we have not yet hit a wall
+			break;
+		}
+		intersectionX-=floor((intersectionX));
+
+		int textureX=(int)floor(intersectionX*textureW);
+		if(side==Side::Vertical && rayDirX > 0)
+			textureX=textureW-textureX-1;
+		if(side==Side::Horizontal && rayDirY < 0)
+			textureX=textureW-textureX-1;
+
+		return textureX;
+	}
 };
