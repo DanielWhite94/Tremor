@@ -1,7 +1,7 @@
-#ifndef RAYCAST_RAY_H
-#define RAYCAST_RAY_H
+#ifndef TREMORENGINE_RAY_H
+#define TREMORENGINE_RAY_H
 
-namespace RayCast {
+namespace TremorEngine {
 
 	class Ray {
 	public:

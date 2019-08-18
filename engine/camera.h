@@ -1,9 +1,9 @@
-#ifndef RAYCAST_CAMERA_H
-#define RAYCAST_CAMERA_H
+#ifndef TREMORENGINE_CAMERA_H
+#define TREMORENGINE_CAMERA_H
 
 #include <cmath>
 
-namespace RayCast {
+namespace TremorEngine {
 
 	class Camera {
 	public:

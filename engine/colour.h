@@ -1,5 +1,5 @@
-#ifndef COLOUR_H
-#define COLOUR_H
+#ifndef TREMORENGINE_COLOUR_H
+#define TREMORENGINE_COLOUR_H
 
 #include <cstdint>
 

@@ -4,7 +4,7 @@
 
 #include "ray.h"
 
-namespace RayCast {
+namespace TremorEngine {
 
 	Ray::Ray(double x, double y, double angle) {
 		startX=x;

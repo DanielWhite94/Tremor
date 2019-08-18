@@ -1,5 +1,5 @@
-#ifndef RAYCAST_RENDERER_H
-#define RAYCAST_RENDERER_H
+#ifndef TREMORENGINE_RENDERER_H
+#define TREMORENGINE_RENDERER_H
 
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
@@ -8,7 +8,7 @@
 #include "colour.h"
 #include "ray.h"
 
-namespace RayCast {
+namespace TremorEngine {
 
 	class Renderer {
 	public:

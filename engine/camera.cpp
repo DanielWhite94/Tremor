@@ -2,7 +2,7 @@
 
 #include "camera.h"
 
-namespace RayCast {
+namespace TremorEngine {
 
 	Camera::Camera(double x, double y, double z, double yaw, double gPitch, double fov, double maxDist): x(x), y(y), z(z), yaw(yaw), fov(fov), maxDist(maxDist) {
 		setPitch(gPitch);

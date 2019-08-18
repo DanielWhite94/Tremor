@@ -10,7 +10,7 @@
 #include "../engine/camera.h"
 #include "../engine/renderer.h"
 
-using namespace RayCast;
+using namespace TremorEngine;
 
 const unsigned long long microsPerS=1000000llu;
 

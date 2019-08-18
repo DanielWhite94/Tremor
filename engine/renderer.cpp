@@ -6,7 +6,7 @@
 #include "ray.h"
 #include "renderer.h"
 
-namespace RayCast {
+namespace TremorEngine {
 	Renderer::Renderer(SDL_Renderer *renderer, int windowWidth, int windowHeight, GetBlockInfoFunctor *getBlockInfoFunctor, double unitBlockHeight): renderer(renderer), windowWidth(windowWidth), windowHeight(windowHeight), unitBlockHeight(unitBlockHeight), getBlockInfoFunctor(getBlockInfoFunctor) {
 		colourBg.r=255; colourBg.g=0; colourBg.b=255; // Pink (to help identify any undrawn regions).
 		colourGround.r=0; colourGround.g=255; colourGround.b=0; // Green.
