@@ -22,6 +22,7 @@ const double fps=30.0;
 
 const double moveSpeed=0.07;
 const double turnSpeed=M_PI/100.0;
+const double verticalTurnSpeed=M_PI/100.0;
 const double verticalSpeed=0.02;
 const unsigned long long jumpTime=1000000llu;
 double standHeight=0.5; // actual height when standing, fraction of unit block height - should be 0.5 for best graphics
@@ -236,6 +237,11 @@ void demoPhysicsTick(void) {
 		standHeight+=verticalSpeed;
 		crouchHeight+=verticalSpeed;
 	}
+
+	if (state[SDL_SCANCODE_X])
+		camera.pitch(-verticalTurnSpeed);
+	if (state[SDL_SCANCODE_C])
+		camera.pitch(verticalTurnSpeed);
 
 	if (state[SDL_SCANCODE_LCTRL]) {
 		if (!isJumping)
