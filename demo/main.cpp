@@ -21,8 +21,9 @@ const int windowHeight=480;
 const double fps=30.0;
 
 const double moveSpeed=0.07;
-const double turnSpeed=M_PI/100.0;
-const double verticalTurnSpeed=M_PI/100.0;
+const double strafeSpeed=0.06;
+const double turnFactor=0.0006;
+const double verticalTurnFactor=0.0004;
 const double verticalSpeed=0.02;
 const unsigned long long jumpTime=1000000llu;
 double standHeight=0.5; // actual height when standing, fraction of unit block height - should be 0.5 for best graphics
@@ -173,6 +174,9 @@ void demoInit(void) {
 		exit(EXIT_FAILURE);
 	}
 
+	// Turn on relative mouse mode to hide cursor and still generate relative changes when cursor hits the edge of the window.
+	SDL_SetRelativeMouseMode(SDL_TRUE);
+
 	// Update map with textures
 	for(unsigned i=0; i<MapH; ++i)
 		for(unsigned j=0; j<MapW; ++j) {
@@ -208,6 +212,17 @@ void demoCheckEvents(void) {
 			case SDL_QUIT:
 				exit(EXIT_SUCCESS);
 			break;
+			case SDL_KEYDOWN:
+				if (event.key.keysym.sym==SDLK_q)
+					exit(EXIT_SUCCESS);
+			break;
+			case SDL_MOUSEMOTION:
+				// Horizontal motion adjusts camera camera yaw
+				camera.turn(turnFactor*event.motion.xrel);
+
+				// Vertical motion adjusts camera pitch
+				camera.pitch(-verticalTurnFactor*event.motion.yrel);
+			break;
 		}
 	}
 }
@@ -218,13 +233,16 @@ void demoPhysicsTick(void) {
 	const Uint8 *state=SDL_GetKeyboardState(NULL);
 
 	double trueMoveSpeed=moveSpeed;
-	if (state[SDL_SCANCODE_LSHIFT] && !isCrouching)
+	double trueStrafeSpeed=strafeSpeed;
+	if (state[SDL_SCANCODE_LSHIFT] && !isCrouching) {
 		trueMoveSpeed*=2;
+		trueStrafeSpeed*=2;
+	}
 
 	if (state[SDL_SCANCODE_A])
-		camera.turn(-turnSpeed);
+		camera.strafe(-trueStrafeSpeed);
 	if (state[SDL_SCANCODE_D])
-		camera.turn(turnSpeed);
+		camera.strafe(trueStrafeSpeed);
 	if (state[SDL_SCANCODE_W])
 		camera.move(trueMoveSpeed);
 	if (state[SDL_SCANCODE_S])
@@ -237,11 +255,6 @@ void demoPhysicsTick(void) {
 		standHeight+=verticalSpeed;
 		crouchHeight+=verticalSpeed;
 	}
-
-	if (state[SDL_SCANCODE_X])
-		camera.pitch(-verticalTurnSpeed);
-	if (state[SDL_SCANCODE_C])
-		camera.pitch(verticalTurnSpeed);
 
 	if (state[SDL_SCANCODE_LCTRL]) {
 		if (!isJumping)
