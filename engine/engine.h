@@ -5,5 +5,6 @@
 #include "colour.h"
 #include "ray.h"
 #include "renderer.h"
+#include "util.h"
 
 #endif

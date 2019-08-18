@@ -1,7 +1,6 @@
 #include <cstdio>
 #include <cstdlib>
 #include <sys/time.h>
-#include <time.h>
 #include <unistd.h>
 
 #include <SDL2/SDL.h>
@@ -10,8 +9,6 @@
 #include <engine.h>
 
 using namespace TremorEngine;
-
-const unsigned long long microsPerS=1000000llu;
 
 // Parameters
 const int windowWidth=640;
@@ -23,7 +20,7 @@ const double moveSpeed=0.07;
 const double strafeSpeed=0.06;
 const double turnFactor=0.0006;
 const double verticalTurnFactor=0.0004;
-const unsigned long long jumpTime=1000000llu;
+const MicroSeconds jumpTime=1000000llu;
 double standHeight=0.5; // actual height when standing, fraction of unit block height - should be 0.5 for best graphics
 double crouchHeight=0.3; // actual height when crouched, fraction of unit block height
 const double jumpHeight=0.3; // max vertical displacement
@@ -90,7 +87,7 @@ Renderer *renderer=NULL;
 
 bool isCrouching=false;
 bool isJumping=false;
-unsigned long long jumpStartTime;
+MicroSeconds jumpStartTime;
 
 SDL_Texture *textureWall1=NULL;
 SDL_Texture *textureWall2=NULL;
@@ -105,34 +102,31 @@ void demoRedraw(void);
 
 bool demoGetBlockInfoFunctor(int mapX, int mapY, Renderer::BlockInfo *info);
 
-unsigned long long demoGetTimeMicro(void);
-void demoDelayMicro(unsigned long long micros);
-
 int main(int argc, char **argv) {
 	demoInit();
 
 	while(1) {
-		unsigned long long tickStartTime=demoGetTimeMicro();
+		MicroSeconds tickStartTime=microSecondsGet();
 
 		// Check events
 		demoCheckEvents();
 
-		// Physics tick to handler things such as player/camera movement
+		// Physics tick to handle things such as player/camera movement
 		demoPhysicsTick();
 
 		// Redraw
 		demoRedraw();
 
 		// Delay for constant FPS
-		unsigned long long tickEndTime=demoGetTimeMicro();
+		MicroSeconds tickEndTime=microSecondsGet();
 		double tickDeltaTime=tickEndTime-tickStartTime;
-		double desiredTickDeltaTime=microsPerS/fps;
+		double desiredTickDeltaTime=microSecondsPerSecond/fps;
 		if (tickDeltaTime<desiredTickDeltaTime)
-			demoDelayMicro(desiredTickDeltaTime-tickDeltaTime);
+			microSecondsDelay(desiredTickDeltaTime-tickDeltaTime);
 
-		double actualFps=microsPerS/(demoGetTimeMicro()-tickStartTime);
+		double actualFps=microSecondsPerSecond/(microSecondsGet()-tickStartTime);
 		if (tickDeltaTime>0.0) {
-			double maxFps=microsPerS/tickDeltaTime;
+			double maxFps=microSecondsPerSecond/tickDeltaTime;
 			printf("fps %.1f (max %.1f)\n", actualFps, maxFps);
 		} else
 			printf("fps %.1f (max inf)\n", actualFps);
@@ -256,7 +250,7 @@ void demoPhysicsTick(void) {
 
 	if (state[SDL_SCANCODE_SPACE] && !isJumping) {
 		isJumping=true;
-		jumpStartTime=demoGetTimeMicro();
+		jumpStartTime=microSecondsGet();
 	}
 
 	// Reset camera z value for standing, but we may update this before we return.
@@ -268,7 +262,7 @@ void demoPhysicsTick(void) {
 
 	// Jumping logic
 	if (isJumping) {
-		unsigned long long timeDelta=demoGetTimeMicro()-jumpStartTime;
+		MicroSeconds timeDelta=microSecondsGet()-jumpStartTime;
 
 		// Finished jumping?
 		if (timeDelta>=jumpTime)
@@ -314,17 +308,4 @@ bool demoGetBlockInfoFunctor(int mapX, int mapY, Renderer::BlockInfo *info) {
 
 	*info=map[mapY][mapX];
 	return true;
-}
-
-unsigned long long demoGetTimeMicro(void) {
-	struct timespec tp;
-	clock_gettime(CLOCK_MONOTONIC_RAW, &tp); // TODO: Check return.
-	return ((unsigned long long)tp.tv_sec)*microsPerS+tp.tv_nsec/1000;
-}
-
-void demoDelayMicro(unsigned long long micros) {
-	struct timespec tp;
-	tp.tv_sec=micros/microsPerS;
-	tp.tv_nsec=(micros%microsPerS)*1000;
-	nanosleep(&tp, NULL);
 }
