@@ -18,9 +18,9 @@ namespace TremorEngine {
 			SDL_Texture *texture; // texture for block walls, if NULL then colour is used instead
 		};
 
-		typedef bool (GetBlockInfoFunctor)(int mapX, int mapY, BlockInfo *info); // should return false if no such block
+		typedef bool (GetBlockInfoFunctor)(int mapX, int mapY, BlockInfo *info, void *userData); // should return false if no such block
 
-		Renderer(SDL_Renderer *renderer, int windowWidth, int windowHeight, GetBlockInfoFunctor *getBlockInfoFunctor, double unitBlockHeight);
+		Renderer(SDL_Renderer *renderer, int windowWidth, int windowHeight, double unitBlockHeight, GetBlockInfoFunctor *getBlockInfoFunctor, void *getBlockInfoUserData);
 		~Renderer();
 
 		void render(const Camera &camera);
@@ -46,6 +46,7 @@ namespace TremorEngine {
 		int windowHeight;
 		double unitBlockHeight; // increasing this will stretch blocks to be larger vertically relative to their width, decreasing will shrink them
 		GetBlockInfoFunctor *getBlockInfoFunctor;
+		void *getBlockInfoUserData;
 
 		Colour colourBg, colourGround, colourSky;
 

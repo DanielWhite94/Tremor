@@ -7,7 +7,7 @@
 #include "renderer.h"
 
 namespace TremorEngine {
-	Renderer::Renderer(SDL_Renderer *renderer, int windowWidth, int windowHeight, GetBlockInfoFunctor *getBlockInfoFunctor, double unitBlockHeight): renderer(renderer), windowWidth(windowWidth), windowHeight(windowHeight), unitBlockHeight(unitBlockHeight), getBlockInfoFunctor(getBlockInfoFunctor) {
+	Renderer::Renderer(SDL_Renderer *renderer, int windowWidth, int windowHeight, double unitBlockHeight, GetBlockInfoFunctor *getBlockInfoFunctor, void *getBlockInfoUserData): renderer(renderer), windowWidth(windowWidth), windowHeight(windowHeight), unitBlockHeight(unitBlockHeight), getBlockInfoFunctor(getBlockInfoFunctor), getBlockInfoUserData(getBlockInfoUserData) {
 		colourBg.r=255; colourBg.g=0; colourBg.b=255; // Pink (to help identify any undrawn regions).
 		colourGround.r=0; colourGround.g=255; colourGround.b=0; // Green.
 		colourSky.r=0; colourSky.g=0; colourSky.b=255; // Blue.
@@ -80,7 +80,7 @@ namespace TremorEngine {
 				// Get info for block at current ray position.
 				int mapX=ray.getMapX();
 				int mapY=ray.getMapY();
-				if (!getBlockInfoFunctor(mapX, mapY, &slices[slicesNext].blockInfo)) {
+				if (!getBlockInfoFunctor(mapX, mapY, &slices[slicesNext].blockInfo, getBlockInfoUserData)) {
 					ray.next(); // advance ray here as we skip proper advancing futher in loop body
 					continue; // no block
 				}
@@ -197,7 +197,7 @@ namespace TremorEngine {
 			for(x=minMapX;x<=maxMapX;++x) {
 				// Grab block
 				BlockInfo blockInfo;
-				if (!getBlockInfoFunctor(x, y, &blockInfo))
+				if (!getBlockInfoFunctor(x, y, &blockInfo, getBlockInfoUserData))
 					continue;
 
 				// Draw block
