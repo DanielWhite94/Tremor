@@ -4,6 +4,8 @@
 
 #include <engine.h>
 
+#include "map.h"
+
 using namespace TremorEngine;
 
 // Parameters
@@ -23,58 +25,6 @@ const double jumpHeight=0.3; // max vertical displacement
 
 Camera camera(-5.928415,10.382321,0.500000,6.261246);
 
-// Create test map - note that texture pointers are filled in later in demoInit.
-#define MapW 16
-#define MapH 16
-#define _ {.height=0.0, .texture=NULL}
-#define w {.height=1.1, .colour={.r=128, .g=128, .b=128}, .texture=NULL}
-#define W {.height=0.7, .colour={.r=120, .g=120, .b=120}, .texture=NULL}
-#define D {.height=1.4, .colour={.r=120, .g=120, .b=120}, .texture=NULL}
-#define T {.height=2.1, .colour={.r=120, .g=120, .b=120}, .texture=NULL}
-#define H {.height=2.8, .colour={.r=120, .g=120, .b=120}, .texture=NULL}
-#define B {.height=1.5, .colour={.r=235, .g=50, .b=52}, .texture=NULL}
-#define s1 {.height=0.1, .colour={.r=177, .g=3, .b=252}, .texture=NULL}
-#define s2 {.height=0.2, .colour={.r=177, .g=3, .b=252}, .texture=NULL}
-#define s3 {.height=0.3, .colour={.r=177, .g=3, .b=252}, .texture=NULL}
-#define s4 {.height=0.4, .colour={.r=177, .g=3, .b=252}, .texture=NULL}
-#define s5 {.height=0.5, .colour={.r=177, .g=3, .b=252}, .texture=NULL}
-#define s6 {.height=0.6, .colour={.r=177, .g=3, .b=252}, .texture=NULL}
-#define s7 {.height=0.7, .colour={.r=177, .g=3, .b=252}, .texture=NULL}
-#define s8 {.height=0.8, .colour={.r=177, .g=3, .b=252}, .texture=NULL}
-#define s9 {.height=0.9, .colour={.r=177, .g=3, .b=252}, .texture=NULL}
-Renderer::BlockInfo map[MapH][MapW]={
-	{ W, W, W, _, _, _, _, _, _, _, _, _, _, _, _, _},
-	{ _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _},
-	{ w, w, w, _, w, _, B, B, B, _, B, B, B, _, B, B},
-	{ w, _, _, _, w, _, _, _, _, _, _, _, _, _, _, B},
-	{ w, _, w, _, _, _, _, _, _, _, _, _, _, _, _, _},
-	{ w, _, w, _, w, w, w, _, _, _, _, _, _, _, _, B},
-	{ _, _, w, _, w, _, _, _, _, _, _, _, _, _, _, B},
-	{ w, _, _, _, _, _, _, _, _, _, _, _, _, _, _, B},
-	{ w, _, w, _, W, W, W, W, W, W, W, _, _, _, _, _},
-	{ w, _, w, _, W, D, D, D, D, D, W, _, _, _, _, B},
-	{ _, _, _, _, W, D, T, T, T, D, W, _, _, _, _, B},
-	{ _, _, _, _, W, D, T, H, T, D, W, _, _, _, _, B},
-	{s3,s2,s1, _, W, D, T, T, T, D, W, _, _, _, _, _},
-	{s4,s5,s6, _, W, D, D, D, D, D, W, _, _, _, _, B},
-	{s9,s8,s7, _, W, W, W, W, W, W, W, _, _, _, _, B},
-	{ _, _, _, _, _, _, _, _, _, _, _, B, B, B, _, B},
-};
-#undef _
-#undef w
-#undef D
-#undef T
-#undef H
-#undef s1
-#undef s2
-#undef s3
-#undef s4
-#undef s5
-#undef s6
-#undef s7
-#undef s8
-#undef s9
-
 // Variables
 SDL_Window *window;
 SDL_Renderer *sdlRenderer;
@@ -85,9 +35,6 @@ bool isCrouching=false;
 bool isJumping=false;
 MicroSeconds jumpStartTime;
 
-SDL_Texture *textureWall1=NULL;
-SDL_Texture *textureWall2=NULL;
-
 // Functions
 void demoInit(void);
 void demoQuit(void);
@@ -95,8 +42,6 @@ void demoQuit(void);
 void demoCheckEvents(void);
 void demoPhysicsTick(void);
 void demoRedraw(void);
-
-bool demoGetBlockInfoFunctor(int mapX, int mapY, Renderer::BlockInfo *info);
 
 int main(int argc, char **argv) {
 	demoInit();
@@ -151,41 +96,19 @@ void demoInit(void) {
 		exit(EXIT_FAILURE);
 	}
 
-	// Load textures
-	textureWall1=IMG_LoadTexture(sdlRenderer, "images/wall1.png");
-	if (textureWall1==NULL) {
-		printf("Could not created load texture at '%s': %s\n", "images/wall1.png", SDL_GetError());
-		exit(EXIT_FAILURE);
-	}
-	textureWall2=IMG_LoadTexture(sdlRenderer, "images/wall2.png");
-	if (textureWall2==NULL) {
-		printf("Could not created load texture at '%s': %s\n", "images/wall2.png", SDL_GetError());
-		exit(EXIT_FAILURE);
-	}
-
 	// Turn on relative mouse mode to hide cursor and still generate relative changes when cursor hits the edge of the window.
 	SDL_SetRelativeMouseMode(SDL_TRUE);
 
-	// Update map with textures
-	for(unsigned i=0; i<MapH; ++i)
-		for(unsigned j=0; j<MapW; ++j) {
-			if (map[i][j].height==1.1)
-				map[i][j].texture=textureWall1;
-
-			if (map[i][j].colour.r==120 && map[i][j].colour.g==120 && map[i][j].colour.b==120)
-				map[i][j].texture=textureWall2;
-		}
+	// Create map
+	Map *map=new Map(sdlRenderer);
 
 	// Create ray casting renderer
 	double unitBlockHeight=(512.0*windowWidth)/640.0;
-	renderer=new Renderer(sdlRenderer, windowWidth, windowHeight, &demoGetBlockInfoFunctor, unitBlockHeight);
+	renderer=new Renderer(sdlRenderer, windowWidth, windowHeight, unitBlockHeight, &mapGetBlockInfoFunctor, map);
 }
 
 void demoQuit(void) {
 	delete renderer;
-
-	SDL_DestroyTexture(textureWall1);
-	SDL_DestroyTexture(textureWall2);
 
 	SDL_DestroyRenderer(sdlRenderer);
 	sdlRenderer=NULL;
@@ -282,26 +205,4 @@ void demoRedraw(void) {
 
 	// Update the screen.
 	SDL_RenderPresent(sdlRenderer);
-}
-
-bool demoGetBlockInfoFunctor(int mapX, int mapY, Renderer::BlockInfo *info) {
-	// Outside of pre-defined region?
-	if (mapX<0 || mapX>=MapW || mapY<0 || mapY>=MapH) {
-		// Create a grid of pillars in half the landscape at least to show distance
-		if (!((mapX%5==0) && (mapY%5==0) && mapX>0))
-			return false;
-		info->height=6.0;
-		info->colour.r=64;
-		info->colour.g=64;
-		info->colour.b=64;
-		info->texture=NULL;
-		return true;
-	}
-
-	// Inside predefined map region - so use array.
-	if (map[mapY][mapX].height<0.0001)
-		return false;
-
-	*info=map[mapY][mapX];
-	return true;
 }
