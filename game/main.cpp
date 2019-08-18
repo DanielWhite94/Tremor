@@ -162,14 +162,14 @@ void demoInit(void) {
 	}
 
 	// Load textures
-	textureWall1=IMG_LoadTexture(sdlRenderer, "demo/wall1.png");
+	textureWall1=IMG_LoadTexture(sdlRenderer, "images/wall1.png");
 	if (textureWall1==NULL) {
-		printf("Could not created load texture at '%s': %s\n", "demo/wall1.png", SDL_GetError());
+		printf("Could not created load texture at '%s': %s\n", "images/wall1.png", SDL_GetError());
 		exit(EXIT_FAILURE);
 	}
-	textureWall2=IMG_LoadTexture(sdlRenderer, "demo/wall2.png");
+	textureWall2=IMG_LoadTexture(sdlRenderer, "images/wall2.png");
 	if (textureWall2==NULL) {
-		printf("Could not created load texture at '%s': %s\n", "demo/wall2.png", SDL_GetError());
+		printf("Could not created load texture at '%s': %s\n", "images/wall2.png", SDL_GetError());
 		exit(EXIT_FAILURE);
 	}
 
