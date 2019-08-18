@@ -21,13 +21,14 @@ namespace RayCast {
 		void setY(double newY);
 		void setZ(double newZ);
 		void setYaw(double newYaw);
-		void setPitch(double newYaw);
+		void setPitch(double newYaw); // limited to interval (-pi/2,pi/2)
 
 		void move(double delta); // Move in current direction (or backwards if delta is negative).
 		void turn(double delta); // adjust yaw
+		void pitch(double delta); // adjust pitch
 	private:
 		double x, y, z;
-		double yaw, pitch;
+		double yaw, pitchValue;
 		double fov; // Field-of-view, radians.
 		double maxDist; // Maximum viewing distance.
 	};

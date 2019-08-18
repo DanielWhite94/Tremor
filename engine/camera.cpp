@@ -1,3 +1,5 @@
+#include <cmath>
+
 #include "camera.h"
 
 namespace RayCast {
@@ -7,7 +9,7 @@ namespace RayCast {
 		y=Y;
 		z=Z;
 		yaw=Yaw;
-		pitch=Pitch;
+		setPitch(Pitch);
 		fov=Fov;
 		maxDist=MaxDist;
 	}
@@ -29,7 +31,7 @@ namespace RayCast {
 	}
 
 	double Camera::getPitch(void) const {
-		return pitch;
+		return pitchValue;
 	}
 
 	double Camera::getFov(void) const {
@@ -57,7 +59,11 @@ namespace RayCast {
 	}
 
 	void Camera::setPitch(double newPitch) {
-		pitch=newPitch;
+		if (newPitch<-M_PI/2.0)
+			newPitch=-M_PI/2.0;
+		if (newPitch>M_PI/2.0)
+			newPitch=M_PI/2.0;
+		pitchValue=newPitch;
 	}
 
 	void Camera::move(double delta) {
@@ -67,5 +73,9 @@ namespace RayCast {
 
 	void Camera::turn(double delta) {
 		yaw+=delta;
+	}
+
+	void Camera::pitch(double delta) {
+		setPitch(pitchValue+delta);
 	}
 };
