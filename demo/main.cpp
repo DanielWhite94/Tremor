@@ -34,10 +34,10 @@ Camera camera(-5.928415,10.382321,0.500000,6.261246);
 #define MapH 16
 #define _ {.height=0.0, .texture=NULL}
 #define w {.height=1.1, .colour={.r=128, .g=128, .b=128}, .texture=NULL} // colour later replaced with wall1 texture
-#define W {.height=0.7, .colour={.r=235, .g=158, .b=52}, .texture=NULL}
-#define D {.height=1.4, .colour={.r=235, .g=170, .b=52}, .texture=NULL}
-#define T {.height=2.1, .colour={.r=235, .g=200, .b=52}, .texture=NULL}
-#define H {.height=2.8, .colour={.r=235, .g=232, .b=52}, .texture=NULL}
+#define W {.height=0.7, .colour={.r=120, .g=120, .b=120}, .texture=NULL}
+#define D {.height=1.4, .colour={.r=120, .g=120, .b=120}, .texture=NULL}
+#define T {.height=2.1, .colour={.r=120, .g=120, .b=120}, .texture=NULL}
+#define H {.height=2.8, .colour={.r=120, .g=120, .b=120}, .texture=NULL}
 #define B {.height=1.5, .colour={.r=235, .g=50, .b=52}, .texture=NULL}
 #define s1 {.height=0.1, .colour={.r=177, .g=3, .b=252}, .texture=NULL}
 #define s2 {.height=0.2, .colour={.r=177, .g=3, .b=252}, .texture=NULL}
@@ -92,6 +92,7 @@ bool isJumping=false;
 unsigned long long jumpStartTime;
 
 SDL_Texture *textureWall1=NULL;
+SDL_Texture *textureWall2=NULL;
 
 // Functions
 void demoInit(void);
@@ -165,12 +166,21 @@ void demoInit(void) {
 		printf("Could not created load texture at '%s': %s\n", "demo/wall1.png", SDL_GetError());
 		exit(EXIT_FAILURE);
 	}
+	textureWall2=IMG_LoadTexture(sdlRenderer, "demo/wall2.png");
+	if (textureWall2==NULL) {
+		printf("Could not created load texture at '%s': %s\n", "demo/wall2.png", SDL_GetError());
+		exit(EXIT_FAILURE);
+	}
 
 	// Update map with textures
 	for(unsigned i=0; i<MapH; ++i)
-		for(unsigned j=0; j<MapW; ++j)
+		for(unsigned j=0; j<MapW; ++j) {
 			if (map[i][j].height==1.1)
 				map[i][j].texture=textureWall1;
+
+			if (map[i][j].colour.r==120 && map[i][j].colour.g==120 && map[i][j].colour.b==120)
+				map[i][j].texture=textureWall2;
+		}
 
 	// Create ray casting renderer
 	renderer=new Renderer(sdlRenderer, windowWidth, windowHeight, &demoGetBlockInfoFunctor);
@@ -180,6 +190,7 @@ void demoQuit(void) {
 	delete renderer;
 
 	SDL_DestroyTexture(textureWall1);
+	SDL_DestroyTexture(textureWall2);
 
 	SDL_DestroyRenderer(sdlRenderer);
 	sdlRenderer=NULL;
