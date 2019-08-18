@@ -7,7 +7,7 @@ namespace RayCast {
 
 	class Camera {
 	public:
-		Camera(double X, double Y, double Z, double Yaw, double Pitch=0.0, double Fov=M_PI/3.0, double MaxDist=64.0);
+		Camera(double x, double y, double z, double yaw, double pitch=0.0, double fov=M_PI/3.0, double maxDist=64.0);
 
 		double getX(void) const ;
 		double getY(void) const ;

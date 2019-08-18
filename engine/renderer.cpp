@@ -7,13 +7,7 @@
 #include "renderer.h"
 
 namespace RayCast {
-	Renderer::Renderer(SDL_Renderer *grenderer, int gwindowWidth, int gwindowHeight, GetBlockInfoFunctor *ggetBlockInfoFunctor, double gunitBlockHeight) {
-		renderer=grenderer;
-		windowWidth=gwindowWidth;
-		windowHeight=gwindowHeight;
-		getBlockInfoFunctor=ggetBlockInfoFunctor;
-		unitBlockHeight=gunitBlockHeight;
-
+	Renderer::Renderer(SDL_Renderer *renderer, int windowWidth, int windowHeight, GetBlockInfoFunctor *getBlockInfoFunctor, double unitBlockHeight): renderer(renderer), windowWidth(windowWidth), windowHeight(windowHeight), unitBlockHeight(unitBlockHeight), getBlockInfoFunctor(getBlockInfoFunctor) {
 		colourBg.r=255; colourBg.g=0; colourBg.b=255; // Pink (to help identify any undrawn regions).
 		colourGround.r=0; colourGround.g=255; colourGround.b=0; // Green.
 		colourSky.r=0; colourSky.g=0; colourSky.b=255; // Blue.

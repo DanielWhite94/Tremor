@@ -4,14 +4,8 @@
 
 namespace RayCast {
 
-	Camera::Camera(double X, double Y, double Z, double Yaw, double Pitch, double Fov, double MaxDist) {
-		x=X;
-		y=Y;
-		z=Z;
-		yaw=Yaw;
-		setPitch(Pitch);
-		fov=Fov;
-		maxDist=MaxDist;
+	Camera::Camera(double x, double y, double z, double yaw, double gPitch, double fov, double maxDist): x(x), y(y), z(z), yaw(yaw), fov(fov), maxDist(maxDist) {
+		setPitch(gPitch);
 	}
 
 	double Camera::getX(void) const {
