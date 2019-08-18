@@ -16,11 +16,8 @@ namespace RayCast {
 		rayDirX=cos(angle);
 		rayDirY=sin(angle);
 
-		// TODO: Use trig versions instead.
-		double rayDirX2=rayDirX*rayDirX;
-		double rayDirY2=rayDirY*rayDirY;
-		deltaDistX=(rayDirX2>0 ? sqrt(1+rayDirY2/rayDirX2) : std::numeric_limits<double>::max());
-		deltaDistY=(rayDirY2>0 ? sqrt(1+rayDirX2/rayDirY2) : std::numeric_limits<double>::max());
+		deltaDistX=(rayDirX!=0.0 ? fabs(1.0/rayDirX) : std::numeric_limits<double>::max());
+		deltaDistY=(rayDirY!=0.0 ? fabs(1.0/rayDirY) : std::numeric_limits<double>::max());
 
 		if (rayDirX<0) {
 			stepX=-1;
