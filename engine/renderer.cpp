@@ -234,8 +234,12 @@ namespace TremorEngine {
 			// Grab texture info and compute factors used to map screen pixels to texture pixels.
 			int textureW, textureH;
 			SDL_QueryTexture(object->getTexture(), NULL, NULL, &textureW, &textureH);
+
 			double textureXFactor=((double)textureW)/objectScreenW;
 			double textureYFactor=((double)textureH)/objectScreenH;
+
+			int textureExtractW=(textureXFactor>1.0 ? floor(textureXFactor) : 1);
+			int textureExtractH=(textureYFactor>1.0 ? floor(textureYFactor) : 1);
 
 			// Loop over all pixels in the w/h region, deciding whether to paint each one.
 			// Loop over y values
@@ -245,6 +249,7 @@ namespace TremorEngine {
 					continue;
 
 				// Loop over x values
+				int textureExtractY=ty*textureYFactor;
 				for(int tx=0, sx=objectCentreScreenX-objectScreenW/2; tx<objectScreenW; ++tx, ++sx) {
 					// Pixel off screen?
 					if (sx<0 || sx>=windowWidth)
@@ -259,11 +264,8 @@ namespace TremorEngine {
 
 					// Draw pixel
 					if (!drawZBuffer) {
-						int textureX=tx*textureXFactor;
-						int textureY=ty*textureYFactor;
-						int textureW=(textureXFactor>1.0 ? floor(textureXFactor) : 1);
-						int textureH=(textureYFactor>1.0 ? floor(textureYFactor) : 1);
-						SDL_Rect srcRect={.x=textureX, .y=textureY, .w=textureW, .h=textureH};
+						int textureExtractX=tx*textureXFactor;
+						SDL_Rect srcRect={.x=textureExtractX, .y=textureExtractY, .w=textureExtractW, .h=textureExtractH};
 						SDL_Rect destRect={.x=sx, .y=sy, .w=1, .h=1};
 						SDL_RenderCopy(renderer, object->getTexture(), &srcRect, &destRect);
 					}
