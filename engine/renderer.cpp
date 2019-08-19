@@ -224,12 +224,15 @@ namespace TremorEngine {
 			int objectCentreScreenX=tan(objectAngle)*screenDist+windowWidth/2;
 			int objectScreenW=computeBlockDisplayHeight(object->getWidth(), distance);
 
-			if (objectCentreScreenX+objectScreenW/2<0 || objectCentreScreenX-objectScreenW/2>=windowWidth)
+			if (objectScreenW<=0 || objectCentreScreenX+objectScreenW/2<0 || objectCentreScreenX-objectScreenW/2>=windowWidth)
 				continue;
 
 			// Compute base and height of object on screen
 			int objectScreenBase=computeBlockDisplayBase(distance, cameraZScreenAdjustment, cameraPitchScreenAdjustment);
 			int objectScreenH=computeBlockDisplayHeight(object->getHeight(), distance);
+
+			if (objectScreenH<=0 || objectScreenBase<0 || objectScreenBase-objectScreenH>=windowHeight)
+				continue;
 
 			// Grab texture info
 			int textureW, textureH;
