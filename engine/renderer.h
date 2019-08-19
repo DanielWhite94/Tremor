@@ -50,7 +50,6 @@ namespace TremorEngine {
 
 		Colour colourBg, colourGround, colourSky;
 
-
 		int computeBlockDisplayBase(double distance, int cameraZScreenAdjustment, int cameraPitchScreenAdjustment);
 		int computeBlockDisplayHeight(double blockHeightFraction, double distance);
 
