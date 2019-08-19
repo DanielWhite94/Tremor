@@ -1,11 +1,14 @@
 #ifndef TREMORENGINE_RENDERER_H
 #define TREMORENGINE_RENDERER_H
 
+#include <vector>
+
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
 
 #include "camera.h"
 #include "colour.h"
+#include "object.h"
 #include "ray.h"
 
 namespace TremorEngine {
@@ -19,8 +22,9 @@ namespace TremorEngine {
 		};
 
 		typedef bool (GetBlockInfoFunctor)(int mapX, int mapY, BlockInfo *info, void *userData); // should return false if no such block
+		typedef std::vector<Object> * (GetObjectsInRangeFunctor)(const Camera &camera, void *userData);
 
-		Renderer(SDL_Renderer *renderer, int windowWidth, int windowHeight, double unitBlockHeight, GetBlockInfoFunctor *getBlockInfoFunctor, void *getBlockInfoUserData);
+		Renderer(SDL_Renderer *renderer, int windowWidth, int windowHeight, double unitBlockHeight, GetBlockInfoFunctor *getBlockInfoFunctor, void *getBlockInfoUserData, GetObjectsInRangeFunctor *getObjectsInRangeFunctor, void *getObjectsInRangeUserData);
 		~Renderer();
 
 		void render(const Camera &camera, bool drawZBuffer); // if drawZBuffer is true then all standard rendering logic is carried out, and then at the very end we draw a heatmap of the z-buffer over the top
@@ -47,6 +51,8 @@ namespace TremorEngine {
 		double unitBlockHeight; // increasing this will stretch blocks to be larger vertically relative to their width, decreasing will shrink them
 		GetBlockInfoFunctor *getBlockInfoFunctor;
 		void *getBlockInfoUserData;
+		GetObjectsInRangeFunctor *getObjectsInRangeFunctor;
+		void *getObjectsInRangeUserData;
 
 		Colour colourBg, colourGround, colourSky;
 

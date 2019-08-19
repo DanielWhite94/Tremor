@@ -8,7 +8,7 @@
 #include "renderer.h"
 
 namespace TremorEngine {
-	Renderer::Renderer(SDL_Renderer *renderer, int windowWidth, int windowHeight, double unitBlockHeight, GetBlockInfoFunctor *getBlockInfoFunctor, void *getBlockInfoUserData): renderer(renderer), windowWidth(windowWidth), windowHeight(windowHeight), unitBlockHeight(unitBlockHeight), getBlockInfoFunctor(getBlockInfoFunctor), getBlockInfoUserData(getBlockInfoUserData) {
+	Renderer::Renderer(SDL_Renderer *renderer, int windowWidth, int windowHeight, double unitBlockHeight, GetBlockInfoFunctor *getBlockInfoFunctor, void *getBlockInfoUserData, GetObjectsInRangeFunctor *getObjectsInRangeFunctor, void *getObjectsInRangeUserData): renderer(renderer), windowWidth(windowWidth), windowHeight(windowHeight), unitBlockHeight(unitBlockHeight), getBlockInfoFunctor(getBlockInfoFunctor), getBlockInfoUserData(getBlockInfoUserData), getObjectsInRangeFunctor(getObjectsInRangeFunctor), getObjectsInRangeUserData(getObjectsInRangeUserData) {
 		colourBg.r=255; colourBg.g=0; colourBg.b=255; // Pink (to help identify any undrawn regions).
 		colourGround.r=0; colourGround.g=255; colourGround.b=0; // Green.
 		colourSky.r=0; colourSky.g=0; colourSky.b=255; // Blue.
@@ -205,6 +205,13 @@ namespace TremorEngine {
 
 			#undef SlicesMax
 		}
+
+		// Draw object sprites
+		std::vector<Object> *objects=getObjectsInRangeFunctor(camera, getObjectsInRangeUserData);
+
+		// TODO: this
+
+		delete objects;
 
 		// If needed draw z-buffer
 		if (drawZBuffer) {
