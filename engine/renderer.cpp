@@ -210,35 +210,30 @@ namespace TremorEngine {
 		std::vector<Object *> *objects=getObjectsInRangeFunctor(camera, getObjectsInRangeUserData);
 
 		for(auto object : *objects) {
-			// Determine displacement and distance between camera to object
+			// Determine angle from camera to object, and skip drawing if object is behind camera.
 			double dx=camera.getX()-object->getCamera().getX();
 			double dy=camera.getY()-object->getCamera().getY();
-			double distance=sqrt(dx*dx+dy*dy);
-
-			// Determine angle from camera to object
-			double objectAngle=atan2(dy, dx);
-
-			objectAngle-=camera.getYaw();
+			double objectAngle=angleNormalise(atan2(dy, dx)-camera.getYaw());
+			if (objectAngle<0.5*M_PI || objectAngle>1.5*M_PI)
+				continue;
 
 			// Determine x-coordinate of screen where object should appear, and its width.
+			// Skip drawing if zero-width or off screen (too far left or right).
+			double distance=sqrt(dx*dx+dy*dy);
 			int objectCentreScreenX=tan(objectAngle)*screenDist+windowWidth/2;
 			int objectScreenW=computeBlockDisplayHeight(object->getWidth(), distance);
-
 			if (objectScreenW<=0 || objectCentreScreenX+objectScreenW/2<0 || objectCentreScreenX-objectScreenW/2>=windowWidth)
 				continue;
 
-			// Compute base and height of object on screen
+			// Compute base and height of object on screen, and skip drawing if zero-height or off screen (too high/low).
 			int objectScreenBase=computeBlockDisplayBase(distance, cameraZScreenAdjustment, cameraPitchScreenAdjustment);
 			int objectScreenH=computeBlockDisplayHeight(object->getHeight(), distance);
-
 			if (objectScreenH<=0 || objectScreenBase<0 || objectScreenBase-objectScreenH>=windowHeight)
 				continue;
 
-			// Grab texture info
+			// Grab texture info and compute factors used to map screen pixels to texture pixels.
 			int textureW, textureH;
 			SDL_QueryTexture(object->getTexture(), NULL, NULL, &textureW, &textureH);
-
-			// Compute factors used to map screen pixels to texture pixels
 			double textureXFactor=((double)textureW)/objectScreenW;
 			double textureYFactor=((double)textureH)/objectScreenH;
 
