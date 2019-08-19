@@ -213,14 +213,15 @@ namespace TremorEngine {
 			// Determine angle from camera to object, and skip drawing if object is behind camera.
 			double dx=camera.getX()-object->getCamera().getX();
 			double dy=camera.getY()-object->getCamera().getY();
-			double objectAngle=angleNormalise(atan2(dy, dx)-camera.getYaw());
-			if (objectAngle<0.5*M_PI || objectAngle>1.5*M_PI)
+			double objectAngleDirect=atan2(dy, dx);
+			double objectAngleRelative=angleNormalise(objectAngleDirect-camera.getYaw());
+			if (objectAngleRelative<0.5*M_PI || objectAngleRelative>1.5*M_PI)
 				continue;
 
 			// Determine x-coordinate of screen where object should appear, and its width.
 			// Skip drawing if zero-width or off screen (too far left or right).
 			double distance=sqrt(dx*dx+dy*dy);
-			int objectCentreScreenX=tan(objectAngle)*screenDist+windowWidth/2;
+			int objectCentreScreenX=tan(objectAngleRelative)*screenDist+windowWidth/2;
 			int objectScreenW=computeBlockDisplayHeight(object->getWidth(), distance);
 			if (objectScreenW<=0 || objectCentreScreenX+objectScreenW/2<0 || objectCentreScreenX-objectScreenW/2>=windowWidth)
 				continue;
@@ -232,8 +233,13 @@ namespace TremorEngine {
 				continue;
 
 			// Grab texture info and compute factors used to map screen pixels to texture pixels.
+			double objectVisibleAngle=object->getCamera().getYaw()+objectAngleDirect;
+			SDL_Texture *objectTexture=object->getTextureAngle(objectVisibleAngle);
+			if (objectTexture==NULL)
+				continue;
+
 			int textureW, textureH;
-			SDL_QueryTexture(object->getTexture(), NULL, NULL, &textureW, &textureH);
+			SDL_QueryTexture(objectTexture, NULL, NULL, &textureW, &textureH);
 
 			double textureXFactor=((double)textureW)/objectScreenW;
 			double textureYFactor=((double)textureH)/objectScreenH;
@@ -267,7 +273,7 @@ namespace TremorEngine {
 						int textureExtractX=tx*textureXFactor;
 						SDL_Rect srcRect={.x=textureExtractX, .y=textureExtractY, .w=textureExtractW, .h=textureExtractH};
 						SDL_Rect destRect={.x=sx, .y=sy, .w=1, .h=1};
-						SDL_RenderCopy(renderer, object->getTexture(), &srcRect, &destRect);
+						SDL_RenderCopy(renderer, objectTexture, &srcRect, &destRect);
 					}
 				}
 			}

@@ -1,6 +1,8 @@
 #ifndef TREMORENGINE_OBJECT_H
 #define TREMORENGINE_OBJECT_H
 
+#include <vector>
+
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
 
@@ -37,14 +39,18 @@ namespace TremorEngine {
 			};
 		};
 
-		Object(double width, double height, const Camera &camera, const MovementParameters &movementParameters, SDL_Texture *texture);
+		Object(double width, double height, const Camera &camera, const MovementParameters &movementParameters);
 		~Object();
+
+		void addTexture(SDL_Texture *texture);
 
 		double getWidth(void) const;
 		double getHeight(void) const;
 		const Camera &getCamera(void) const;
 		MovementState getMovementState(void) const;
-		SDL_Texture *getTexture(void) const ;
+		int getTextureCount(void) const ;
+		SDL_Texture *getTextureN(int n) const ;
+		SDL_Texture *getTextureAngle(double angle) const ;
 
 		void move(double delta); // Move in current direction (or backwards if delta is negative).
 		void strafe(double delta); // Move perpendicular to direction (left is delta is negative, right if positive).
@@ -62,7 +68,7 @@ namespace TremorEngine {
 
 		MovementData movementData;
 
-		SDL_Texture *texture;
+		std::vector<SDL_Texture *> *textures;
 	};
 
 };

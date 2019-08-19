@@ -1,12 +1,21 @@
+#include <cmath>
+
 #include "object.h"
+#include "util.h"
 
 namespace TremorEngine {
-	Object::Object(double width, double height, const Camera &camera, const MovementParameters &movementParameters, SDL_Texture *texture): width(width), height(height), camera(camera), texture(texture) {
+	Object::Object(double width, double height, const Camera &camera, const MovementParameters &movementParameters): width(width), height(height), camera(camera) {
 		movementData.parameters=movementParameters;
 		movementData.state=MovementState::Standard;
+		textures=new std::vector<SDL_Texture *>;
 	}
 
 	Object::~Object() {
+		delete textures;
+	}
+
+	void Object::addTexture(SDL_Texture *texture) {
+		textures->push_back(texture);
 	}
 
 	double Object::getWidth(void) const {
@@ -25,8 +34,26 @@ namespace TremorEngine {
 		return movementData.state;
 	}
 
-	SDL_Texture *Object::getTexture(void) const {
-		return texture;
+	int Object::getTextureCount(void) const {
+		return textures->size();
+	}
+
+	SDL_Texture *Object::getTextureN(int n) const {
+		if (n<0 || n>=getTextureCount())
+			return NULL;
+
+		return (*textures)[n];
+	}
+
+	SDL_Texture *Object::getTextureAngle(double angle) const {
+		// TODO: this seems convoluted and can no doubt be improved
+		double fraction=angleNormalise(angle)/(2.0*M_PI)-0.25;
+		if (fraction<0)
+			fraction+=1.0;
+		int n=floor(getTextureCount()*fraction+0.5); // +0.5 is to round to nearest rather than always down
+		if (n>=getTextureCount())
+			n-=getTextureCount();
+		return getTextureN(n);
 	}
 
 	void Object::move(double delta) {

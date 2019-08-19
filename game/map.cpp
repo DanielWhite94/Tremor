@@ -83,11 +83,27 @@ Map::Map(SDL_Renderer *renderer): renderer(renderer) {
 		printf("Could not created load texture at '%s': %s\n", "images/barrel.png", SDL_GetError());
 		exit(EXIT_FAILURE);
 	}
+	for(int i=0; i<8; ++i) {
+		char path[1024]; // TODO: better
+		sprintf(path, "images/lois/%i.png", i);
+		textureLois[i]=IMG_LoadTexture(renderer, path);
+		if (textureLois[i]==NULL) {
+			printf("Could not created load texture at '%s': %s\n", path, SDL_GetError());
+			exit(EXIT_FAILURE);
+		}
+	}
 
 	// Create objects
 	Camera barrelCamera(0.768908,9.275132,0.500000,7.947846);
 	Object::MovementParameters barrelMovementParameters={.standHeight=0.3};
-	objectBarrel=new Object(0.3, 0.5, barrelCamera, barrelMovementParameters, textureBarrel);
+	objectBarrel=new Object(0.3, 0.5, barrelCamera, barrelMovementParameters);
+	objectBarrel->addTexture(textureBarrel);
+
+	Camera loisCamera(1.423984,10.041379,0.500000,3.126846);
+	Object::MovementParameters loisMovementParameters={.standHeight=0.5};
+	objectLois=new Object(0.3, 0.6, loisCamera, loisMovementParameters);
+	for(int i=0; i<8; ++i)
+		objectLois->addTexture(textureLois[i]);
 }
 
 Map::~Map() {
@@ -132,6 +148,7 @@ std::vector<Object *> *Map::getObjectsInRangeFunctor(const Camera &camera) {
 
 	// Temporary implementation returning our only object, regardless of current camera view.
 	list->push_back(objectBarrel);
+	list->push_back(objectLois);
 
 	return list;
 }
