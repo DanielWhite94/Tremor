@@ -65,8 +65,9 @@ std::vector<Object *> *mapGetObjectsInRangeFunctor(const Camera &camera, void *u
 }
 
 Map::Map(SDL_Renderer *renderer): renderer(renderer) {
-	// Load textures
 	// TODO: better error handling than exit
+
+	// Load textures
 	textureWall1=IMG_LoadTexture(renderer, "images/wall1.png");
 	if (textureWall1==NULL) {
 		printf("Could not created load texture at '%s': %s\n", "images/wall1.png", SDL_GetError());
@@ -77,11 +78,24 @@ Map::Map(SDL_Renderer *renderer): renderer(renderer) {
 		printf("Could not created load texture at '%s': %s\n", "images/wall2.png", SDL_GetError());
 		exit(EXIT_FAILURE);
 	}
+	textureBarrel=IMG_LoadTexture(renderer, "images/barrel.png");
+	if (textureBarrel==NULL) {
+		printf("Could not created load texture at '%s': %s\n", "images/barrel.png", SDL_GetError());
+		exit(EXIT_FAILURE);
+	}
+
+	// Create objects
+	Camera barrelCamera(0.768908,9.275132,0.500000,7.947846);
+	Object::MovementParameters barrelMovementParameters={.standHeight=0.3};
+	objectBarrel=new Object(barrelCamera, barrelMovementParameters);
 }
 
 Map::~Map() {
 	SDL_DestroyTexture(textureWall1);
 	SDL_DestroyTexture(textureWall2);
+	SDL_DestroyTexture(textureBarrel);
+
+	delete objectBarrel;
 }
 
 bool Map::getBlockInfoFunctor(int mapX, int mapY, Renderer::BlockInfo *info) {
@@ -116,7 +130,8 @@ bool Map::getBlockInfoFunctor(int mapX, int mapY, Renderer::BlockInfo *info) {
 std::vector<Object *> *Map::getObjectsInRangeFunctor(const Camera &camera) {
 	std::vector<Object *> *list=new std::vector<Object *>;
 
-	// TODO: this
+	// Temporary implementation returning our only object, regardless of current camera view.
+	list->push_back(objectBarrel);
 
 	return list;
 }
