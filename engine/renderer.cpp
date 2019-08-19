@@ -22,7 +22,7 @@ namespace TremorEngine {
 
 	void Renderer::render(const Camera &camera, bool drawZBuffer) {
 		// Calculate various useful values.
-		double screenDist=windowWidth/(2*tan(camera.getFov()/2));
+		double screenDist=camera.getScreenDistance(windowWidth);
 
 		int cameraZScreenAdjustment=(camera.getZ()-0.5)*unitBlockHeight;
 

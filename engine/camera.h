@@ -16,6 +16,7 @@ namespace TremorEngine {
 		double getPitch(void) const ;
 		double getFov(void) const ;
 		double getMaxDist(void) const ;
+		double getScreenDistance(int windowWidth) const ; // take our FOV and window width and determine how far the virtual screen must be from the camera
 
 		void setX(double newX);
 		void setY(double newY);

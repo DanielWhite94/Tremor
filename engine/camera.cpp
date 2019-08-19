@@ -36,6 +36,10 @@ namespace TremorEngine {
 		return maxDist;
 	}
 
+	double Camera::getScreenDistance(int windowWidth) const {
+		return windowWidth/(2.0*tan(getFov()/2.0));
+	}
+
 	void Camera::setX(double newX) {
 		x=newX;
 	}
