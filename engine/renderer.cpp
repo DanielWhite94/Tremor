@@ -207,7 +207,7 @@ namespace TremorEngine {
 		}
 
 		// Draw object sprites
-		std::vector<Object> *objects=getObjectsInRangeFunctor(camera, getObjectsInRangeUserData);
+		std::vector<Object *> *objects=getObjectsInRangeFunctor(camera, getObjectsInRangeUserData);
 
 		// TODO: this
 

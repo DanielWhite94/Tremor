@@ -22,7 +22,7 @@ namespace TremorEngine {
 		};
 
 		typedef bool (GetBlockInfoFunctor)(int mapX, int mapY, BlockInfo *info, void *userData); // should return false if no such block
-		typedef std::vector<Object> * (GetObjectsInRangeFunctor)(const Camera &camera, void *userData);
+		typedef std::vector<Object *> * (GetObjectsInRangeFunctor)(const Camera &camera, void *userData);
 
 		Renderer(SDL_Renderer *renderer, int windowWidth, int windowHeight, double unitBlockHeight, GetBlockInfoFunctor *getBlockInfoFunctor, void *getBlockInfoUserData, GetObjectsInRangeFunctor *getObjectsInRangeFunctor, void *getObjectsInRangeUserData);
 		~Renderer();

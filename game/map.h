@@ -9,7 +9,7 @@ using namespace TremorEngine;
 
 // Wrapper functions suitable for passing to Renderer constructor (with class pointer as userData)
 bool mapGetBlockInfoFunctor(int mapX, int mapY, Renderer::BlockInfo *info, void *userData);
-std::vector<Object> *mapGetObjectsInRangeFunctor(const Camera &camera, void *userData);
+std::vector<Object *> *mapGetObjectsInRangeFunctor(const Camera &camera, void *userData);
 
 class Map {
 public:
@@ -17,7 +17,7 @@ public:
 	~Map();
 
 	bool getBlockInfoFunctor(int mapX, int mapY, Renderer::BlockInfo *info);
-	std::vector<Object> *getObjectsInRangeFunctor(const Camera &camera);
+	std::vector<Object *> *getObjectsInRangeFunctor(const Camera &camera);
 
 private:
 	SDL_Renderer *renderer;

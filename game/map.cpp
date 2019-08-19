@@ -59,7 +59,7 @@ bool mapGetBlockInfoFunctor(int mapX, int mapY, Renderer::BlockInfo *info, void 
 	return map->getBlockInfoFunctor(mapX, mapY, info);
 }
 
-std::vector<Object> *mapGetObjectsInRangeFunctor(const Camera &camera, void *userData) {
+std::vector<Object *> *mapGetObjectsInRangeFunctor(const Camera &camera, void *userData) {
 	class Map *map=(class Map *)userData;
 	return map->getObjectsInRangeFunctor(camera);
 }
@@ -113,8 +113,8 @@ bool Map::getBlockInfoFunctor(int mapX, int mapY, Renderer::BlockInfo *info) {
 	return true;
 }
 
-std::vector<Object> *Map::getObjectsInRangeFunctor(const Camera &camera) {
-	std::vector<Object> *list=new std::vector<Object>;
+std::vector<Object *> *Map::getObjectsInRangeFunctor(const Camera &camera) {
+	std::vector<Object *> *list=new std::vector<Object *>;
 
 	// TODO: this
 
