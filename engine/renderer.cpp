@@ -1,3 +1,4 @@
+#include <cassert>
 #include <cmath>
 #include <limits>
 
@@ -11,12 +12,15 @@ namespace TremorEngine {
 		colourBg.r=255; colourBg.g=0; colourBg.b=255; // Pink (to help identify any undrawn regions).
 		colourGround.r=0; colourGround.g=255; colourGround.b=0; // Green.
 		colourSky.r=0; colourSky.g=0; colourSky.b=255; // Blue.
+
+		zBuffer=(double *)malloc(sizeof(double)*windowWidth*windowHeight);
 	}
 
 	Renderer::~Renderer() {
+		free(zBuffer);
 	}
 
-	void Renderer::render(const Camera &camera) {
+	void Renderer::render(const Camera &camera, bool drawZBuffer) {
 		// Calculate various useful values.
 		double screenDist=windowWidth/(2*tan(camera.getFov()/2));
 
@@ -30,6 +34,10 @@ namespace TremorEngine {
 		int cameraPitchScreenAdjustment=cameraPitchScreenAdjustmentDouble;
 
 		int horizonHeight=windowHeight/2+cameraPitchScreenAdjustment;
+
+		// Clear z-buffer to infinity values.
+		for(unsigned i=0; i<windowWidth*windowHeight; ++i)
+			zBuffer[i]=std::numeric_limits<double>::max();
 
 		// Clear surface.
 		SDL_SetRenderDrawColor(renderer, colourBg.r, colourBg.g, colourBg.b, 255);
@@ -126,44 +134,90 @@ namespace TremorEngine {
 				--slicesNext;
 
 				// Draw block
-				if (slices[slicesNext].blockInfo.texture!=NULL) {
-					// Textured block
-					// Note: we always ask the renderer to draw the whole slice - even if say we are very close to a block and so most of the slice is not visible anyway - hoping that it interally optimises the blit.
+				if (!drawZBuffer) {
+					if (slices[slicesNext].blockInfo.texture!=NULL) {
+						// Textured block
+						// Note: we always ask the renderer to draw the whole slice - even if say we are very close to a block and so most of the slice is not visible anyway - hoping that it interally optimises the blit.
 
-					int textureW, textureH;
-					SDL_QueryTexture(slices[slicesNext].blockInfo.texture, NULL, NULL, &textureW, &textureH);
+						int textureW, textureH;
+						SDL_QueryTexture(slices[slicesNext].blockInfo.texture, NULL, NULL, &textureW, &textureH);
 
-					uint8_t colourMod=(slices[slicesNext].intersectionSide==Ray::Side::Horizontal ? 153 : 255);
-					SDL_SetTextureColorMod(slices[slicesNext].blockInfo.texture, colourMod, colourMod, colourMod); // make edges/corners between horizontal and vertical walls clearer
+						uint8_t colourMod=(slices[slicesNext].intersectionSide==Ray::Side::Horizontal ? 153 : 255);
+						SDL_SetTextureColorMod(slices[slicesNext].blockInfo.texture, colourMod, colourMod, colourMod); // make edges/corners between horizontal and vertical walls clearer
 
-					SDL_Rect srcRect={.x=slices[slicesNext].blockTextureX, .y=0, .w=1, .h=textureH};
-					SDL_Rect destRect={.x=x, .y=slices[slicesNext].blockDisplayBase-slices[slicesNext].blockDisplayHeight, .w=1, .h=slices[slicesNext].blockDisplayHeight};
-					SDL_RenderCopy(renderer, slices[slicesNext].blockInfo.texture, &srcRect, &destRect);
-				} else {
-					// Solid colour block
+						SDL_Rect srcRect={.x=slices[slicesNext].blockTextureX, .y=0, .w=1, .h=textureH};
+						SDL_Rect destRect={.x=x, .y=slices[slicesNext].blockDisplayBase-slices[slicesNext].blockDisplayHeight, .w=1, .h=slices[slicesNext].blockDisplayHeight};
+						SDL_RenderCopy(renderer, slices[slicesNext].blockInfo.texture, &srcRect, &destRect);
+					} else {
+						// Solid colour block
 
-					// Calculate display colour for block
-					Colour blockDisplayColour=slices[slicesNext].blockInfo.colour;
-					if (slices[slicesNext].intersectionSide==Ray::Side::Horizontal)
-						blockDisplayColour.mul(0.6); // make edges/corners between horizontal and vertical walls clearer
-					colourAdjustForDistance(blockDisplayColour, slices[slicesNext].distance);
+						// Calculate display colour for block
+						Colour blockDisplayColour=slices[slicesNext].blockInfo.colour;
+						if (slices[slicesNext].intersectionSide==Ray::Side::Horizontal)
+							blockDisplayColour.mul(0.6); // make edges/corners between horizontal and vertical walls clearer
+						colourAdjustForDistance(blockDisplayColour, slices[slicesNext].distance);
 
-					// Draw block
-					SDL_SetRenderDrawColor(renderer, blockDisplayColour.r, blockDisplayColour.g, blockDisplayColour.b, 255);
-					SDL_RenderDrawLine(renderer, x, slices[slicesNext].blockDisplayBase-slices[slicesNext].blockDisplayHeight, x, slices[slicesNext].blockDisplayBase);
+						// Draw block
+						SDL_SetRenderDrawColor(renderer, blockDisplayColour.r, blockDisplayColour.g, blockDisplayColour.b, 255);
+						SDL_RenderDrawLine(renderer, x, slices[slicesNext].blockDisplayBase-slices[slicesNext].blockDisplayHeight, x, slices[slicesNext].blockDisplayBase);
+					}
+				}
+
+				// Update z-buffer
+				int zBufferYLoopStart=slices[slicesNext].blockDisplayBase-slices[slicesNext].blockDisplayHeight;
+				if (zBufferYLoopStart<0)
+					zBufferYLoopStart=0;
+				int zBufferYLoopEnd=slices[slicesNext].blockDisplayBase;
+				if (zBufferYLoopEnd>=windowHeight)
+					zBufferYLoopEnd=windowHeight-1;
+				for(int y=zBufferYLoopStart; y<=zBufferYLoopEnd; ++y) {
+					assert(slices[slicesNext].distance<zBuffer[x+y*windowWidth]);
+					zBuffer[x+y*windowWidth]=slices[slicesNext].distance;
 				}
 
 				// Do we need to draw top of this block? (because it is below the horizon)
 				int blockDisplayTop=slices[slicesNext].blockDisplayBase-slices[slicesNext].blockDisplayHeight;
 				if (blockDisplayTop>horizonHeight) {
-					Colour blockTopDisplayColour=slices[slicesNext].blockInfo.colour;
-					blockTopDisplayColour.mul(1.05);
-					SDL_SetRenderDrawColor(renderer, blockTopDisplayColour.r, blockTopDisplayColour.g, blockTopDisplayColour.b, 255);
-					SDL_RenderDrawLine(renderer, x, blockDisplayTop-slices[slicesNext].blockDisplayTopSize, x, blockDisplayTop);
+					if (!drawZBuffer) {
+						Colour blockTopDisplayColour=slices[slicesNext].blockInfo.colour;
+						blockTopDisplayColour.mul(1.05);
+						SDL_SetRenderDrawColor(renderer, blockTopDisplayColour.r, blockTopDisplayColour.g, blockTopDisplayColour.b, 255);
+						SDL_RenderDrawLine(renderer, x, blockDisplayTop-slices[slicesNext].blockDisplayTopSize, x, blockDisplayTop);
+					}
+
+					// Update z-buffer
+					int zBufferYLoopStart=blockDisplayTop-slices[slicesNext].blockDisplayTopSize;
+					if (zBufferYLoopStart<0)
+						zBufferYLoopStart=0;
+					int zBufferYLoopEnd=blockDisplayTop;
+					if (zBufferYLoopEnd>=windowHeight)
+						zBufferYLoopEnd=windowHeight-1;
+					for(int y=zBufferYLoopStart; y<=zBufferYLoopEnd; ++y) {
+						// Note: this is not correct - the distance should start at the one used below,
+						// but then increase up to the ray's distance at next intersection point,
+						// as calculated in ray casting step. However this should be safe for the purposes
+						// of using the z-buffer for drawing sprites, which should be above the floor/tops
+						// anyway.
+						zBuffer[x+y*windowWidth]=slices[slicesNext].distance;
+					}
 				}
 			}
 
 			#undef SlicesMax
+		}
+
+		// If needed draw z-buffer
+		if (drawZBuffer) {
+			for(int y=0; y<windowHeight; ++y) {
+				for(int x=0; x<windowWidth; ++x) {
+					double distance=zBuffer[x+y*windowWidth];
+					double factor=(distance>1.0 ? 1.0/distance : 1.0);
+					uint8_t colour=(int)floor(255*factor);
+
+					SDL_SetRenderDrawColor(renderer, colour, colour, colour, 255);
+					SDL_RenderDrawPoint(renderer, x, y);
+				}
+			}
 		}
 	}
 

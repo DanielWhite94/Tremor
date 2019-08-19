@@ -35,6 +35,8 @@ bool isCrouching=false;
 bool isJumping=false;
 MicroSeconds jumpStartTime;
 
+bool showZBuffer=false;
+
 // Functions
 void demoInit(void);
 void demoQuit(void);
@@ -126,8 +128,14 @@ void demoCheckEvents(void) {
 				exit(EXIT_SUCCESS);
 			break;
 			case SDL_KEYDOWN:
-				if (event.key.keysym.sym==SDLK_q)
-					exit(EXIT_SUCCESS);
+				switch(event.key.keysym.sym) {
+					case SDLK_q:
+						exit(EXIT_SUCCESS);
+					break;
+					case SDLK_z:
+						showZBuffer=!showZBuffer;
+					break;
+				}
 			break;
 			case SDL_MOUSEMOTION:
 				// Horizontal motion adjusts camera camera yaw
@@ -200,7 +208,7 @@ void demoPhysicsTick(void) {
 
 void demoRedraw(void) {
 	// Perform ray casting
-	renderer->render(camera);
+	renderer->render(camera, showZBuffer);
 	renderer->renderTopDown(camera);
 
 	// Update the screen.

@@ -23,7 +23,7 @@ namespace TremorEngine {
 		Renderer(SDL_Renderer *renderer, int windowWidth, int windowHeight, double unitBlockHeight, GetBlockInfoFunctor *getBlockInfoFunctor, void *getBlockInfoUserData);
 		~Renderer();
 
-		void render(const Camera &camera);
+		void render(const Camera &camera, bool drawZBuffer); // if drawZBuffer is true then all standard rendering logic is carried out, and then at the very end we draw a heatmap of the z-buffer over the top
 		void renderTopDown(const Camera &camera);
 
 	private:
@@ -49,6 +49,8 @@ namespace TremorEngine {
 		void *getBlockInfoUserData;
 
 		Colour colourBg, colourGround, colourSky;
+
+		double *zBuffer; // windowWidth*windowHeight number of entries
 
 		int computeBlockDisplayBase(double distance, int cameraZScreenAdjustment, int cameraPitchScreenAdjustment);
 		int computeBlockDisplayHeight(double blockHeightFraction, double distance);
