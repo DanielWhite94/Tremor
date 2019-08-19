@@ -7,6 +7,7 @@
 
 #include "camera.h"
 #include "colour.h"
+#include "object.h"
 #include "ray.h"
 #include "renderer.h"
 #include "util.h"

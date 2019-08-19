@@ -18,12 +18,9 @@ const double moveSpeed=0.07;
 const double strafeSpeed=0.06;
 const double turnFactor=0.0006;
 const double verticalTurnFactor=0.0004;
-const MicroSeconds jumpTime=1000000llu;
-double standHeight=0.5; // actual height when standing, fraction of unit block height - should be 0.5 for best graphics
-double crouchHeight=0.3; // actual height when crouched, fraction of unit block height
-const double jumpHeight=0.3; // max vertical displacement
+const Object::MovementParameters playerMovementParametersStart={.jumpTime=1000000llu, .standHeight=0.5, .crouchHeight=0.3, .jumpHeight=0.3};
 
-Camera camera(-5.928415,10.382321,0.500000,6.261246);
+const Camera playerCameraStart(-5.928415,10.382321,0.500000,6.261246);
 
 // Variables
 SDL_Window *window;
@@ -31,11 +28,11 @@ SDL_Renderer *sdlRenderer;
 
 Renderer *renderer=NULL;
 
-bool isCrouching=false;
-bool isJumping=false;
-MicroSeconds jumpStartTime;
-
 bool showZBuffer=false;
+
+Map *map=NULL;
+
+Object *playerObject=NULL;
 
 // Functions
 void demoInit(void);
@@ -102,15 +99,22 @@ void demoInit(void) {
 	SDL_SetRelativeMouseMode(SDL_TRUE);
 
 	// Create map
-	Map *map=new Map(sdlRenderer);
+	map=new Map(sdlRenderer);
 
 	// Create ray casting renderer
 	double unitBlockHeight=(512.0*windowWidth)/640.0;
 	renderer=new Renderer(sdlRenderer, windowWidth, windowHeight, unitBlockHeight, &mapGetBlockInfoFunctor, map);
+
+	// Create player object
+	playerObject=new Object(playerCameraStart, playerMovementParametersStart);
 }
 
 void demoQuit(void) {
+	delete playerObject;
+
 	delete renderer;
+
+	delete map;
 
 	SDL_DestroyRenderer(sdlRenderer);
 	sdlRenderer=NULL;
@@ -139,10 +143,10 @@ void demoCheckEvents(void) {
 			break;
 			case SDL_MOUSEMOTION:
 				// Horizontal motion adjusts camera camera yaw
-				camera.turn(turnFactor*event.motion.xrel);
+				playerObject->turn(turnFactor*event.motion.xrel);
 
 				// Vertical motion adjusts camera pitch
-				camera.pitch(-verticalTurnFactor*event.motion.yrel);
+				playerObject->pitch(-verticalTurnFactor*event.motion.yrel);
 			break;
 		}
 	}
@@ -153,63 +157,41 @@ void demoPhysicsTick(void) {
 	SDL_PumpEvents();
 	const Uint8 *state=SDL_GetKeyboardState(NULL);
 
+	// Running?
 	double trueMoveSpeed=moveSpeed;
 	double trueStrafeSpeed=strafeSpeed;
-	if (state[SDL_SCANCODE_LSHIFT] && !isCrouching) {
+	if (state[SDL_SCANCODE_LSHIFT] && playerObject->getMovementState()!=Object::MovementState::Crouching) {
 		trueMoveSpeed*=2;
 		trueStrafeSpeed*=2;
 	}
 
+	// Handle WASD
 	if (state[SDL_SCANCODE_A])
-		camera.strafe(-trueStrafeSpeed);
+		playerObject->strafe(-trueStrafeSpeed);
 	if (state[SDL_SCANCODE_D])
-		camera.strafe(trueStrafeSpeed);
+		playerObject->strafe(trueStrafeSpeed);
 	if (state[SDL_SCANCODE_W])
-		camera.move(trueMoveSpeed);
+		playerObject->move(trueMoveSpeed);
 	if (state[SDL_SCANCODE_S])
-		camera.move(-trueMoveSpeed);
+		playerObject->move(-trueMoveSpeed);
 
-	if (state[SDL_SCANCODE_LCTRL]) {
-		if (!isJumping)
-			isCrouching=true;
-	} else
-		isCrouching=false;
+	// Set crouching state and/or begin jump.
+	playerObject->crouch(state[SDL_SCANCODE_LCTRL]);
+	if (state[SDL_SCANCODE_SPACE])
+		playerObject->jump();
 
-	if (state[SDL_SCANCODE_SPACE] && !isJumping) {
-		isJumping=true;
-		jumpStartTime=microSecondsGet();
-	}
-
-	// Reset camera z value for standing, but we may update this before we return.
-	camera.setZ(standHeight);
-
-	// Crouching logic
-	if (isCrouching)
-		camera.setZ(crouchHeight);
-
-	// Jumping logic
-	if (isJumping) {
-		MicroSeconds timeDelta=microSecondsGet()-jumpStartTime;
-
-		// Finished jumping?
-		if (timeDelta>=jumpTime)
-			isJumping=false;
-		else {
-			// Otherwise update camera Z value based on how far through jump we are
-			double jumpTimeFraction=((double)timeDelta)/jumpTime;
-			double currJumpHeight=sin(jumpTimeFraction*M_PI)*jumpHeight;
-			camera.setZ(standHeight+currJumpHeight);
-		}
-	}
+	// Tick
+	playerObject->tick();
 
 	// Print position for debugging
+	const Camera &camera=playerObject->getCamera();
 	printf("camera (x,y,z,yaw,pitch)=(%f,%f,%f,%f,%f)\n", camera.getX(), camera.getY(), camera.getZ(), camera.getYaw(), camera.getPitch());
 }
 
 void demoRedraw(void) {
 	// Perform ray casting
-	renderer->render(camera, showZBuffer);
-	renderer->renderTopDown(camera);
+	renderer->render(playerObject->getCamera(), showZBuffer);
+	renderer->renderTopDown(playerObject->getCamera());
 
 	// Update the screen.
 	SDL_RenderPresent(sdlRenderer);
