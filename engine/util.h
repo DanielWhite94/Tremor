@@ -7,6 +7,8 @@ namespace TremorEngine {
 
 	MicroSeconds microSecondsGet(void);
 	void microSecondsDelay(MicroSeconds micros);
+
+	double angleNormalise(double angle); // adjusts into interval [0, 2pi)
 };
 
 #endif
