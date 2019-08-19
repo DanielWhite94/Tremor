@@ -209,7 +209,69 @@ namespace TremorEngine {
 		// Draw object sprites
 		std::vector<Object *> *objects=getObjectsInRangeFunctor(camera, getObjectsInRangeUserData);
 
-		// TODO: this
+		for(auto object : *objects) {
+			// Determine displacement and distance between camera to object
+			double dx=camera.getX()-object->getCamera().getX();
+			double dy=camera.getY()-object->getCamera().getY();
+			double distance=sqrt(dx*dx+dy*dy);
+
+			// Determine angle from camera to object
+			double objectAngle=atan2(dy, dx);
+
+			objectAngle-=camera.getYaw();
+
+			// Determine x-coordinate of screen where object should appear, and its width.
+			int objectCentreScreenX=tan(objectAngle)*screenDist+windowWidth/2;
+			int objectScreenW=computeBlockDisplayHeight(object->getWidth(), distance);
+
+			if (objectCentreScreenX+objectScreenW/2<0 || objectCentreScreenX-objectScreenW/2>=windowWidth)
+				continue;
+
+			// Compute base and height of object on screen
+			int objectScreenBase=computeBlockDisplayBase(distance, cameraZScreenAdjustment, cameraPitchScreenAdjustment);
+			int objectScreenH=computeBlockDisplayHeight(object->getHeight(), distance);
+
+			// Grab texture info
+			int textureW, textureH;
+			SDL_QueryTexture(object->getTexture(), NULL, NULL, &textureW, &textureH);
+
+			// Compute factors used to map screen pixels to texture pixels
+			double textureXFactor=((double)textureW)/objectScreenW;
+			double textureYFactor=((double)textureH)/objectScreenH;
+
+			// Loop over all pixels in the w/h region, deciding whether to paint each one.
+			// Loop over y values
+			for(int ty=0, sy=objectScreenBase-objectScreenH; ty<objectScreenH; ++ty, ++sy) {
+				// Column off screen?
+				if (sy<0 || sy>=windowHeight)
+					continue;
+
+				// Loop over x values
+				for(int tx=0, sx=objectCentreScreenX-objectScreenW/2; tx<objectScreenW; ++tx, ++sx) {
+					// Pixel off screen?
+					if (sx<0 || sx>=windowWidth)
+						continue;
+
+					// z-buffer indicates object would not be visible?
+					if (distance>zBuffer[sx+sy*windowWidth])
+						continue;
+
+					// Update z-buffer
+					zBuffer[sx+sy*windowWidth]=distance;
+
+					// Draw pixel
+					if (!drawZBuffer) {
+						int textureX=tx*textureXFactor;
+						int textureY=ty*textureYFactor;
+						int textureW=(textureXFactor>1.0 ? floor(textureXFactor) : 1);
+						int textureH=(textureYFactor>1.0 ? floor(textureYFactor) : 1);
+						SDL_Rect srcRect={.x=textureX, .y=textureY, .w=textureW, .h=textureH};
+						SDL_Rect destRect={.x=sx, .y=sy, .w=1, .h=1};
+						SDL_RenderCopy(renderer, object->getTexture(), &srcRect, &destRect);
+					}
+				}
+			}
+		}
 
 		delete objects;
 
