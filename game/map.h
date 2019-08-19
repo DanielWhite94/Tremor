@@ -25,8 +25,10 @@ private:
 	SDL_Texture *textureWall1;
 	SDL_Texture *textureWall2;
 	SDL_Texture *textureBarrel;
+	SDL_Texture *textureLois[8];
 
 	Object *objectBarrel;
+	Object *objectLois;
 
 };
 
