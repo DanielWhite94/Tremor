@@ -1,6 +1,9 @@
 #ifndef TREMORENGINE_OBJECT_H
 #define TREMORENGINE_OBJECT_H
 
+#include <SDL2/SDL.h>
+#include <SDL2/SDL_image.h>
+
 #include "camera.h"
 #include "util.h"
 
@@ -34,12 +37,12 @@ namespace TremorEngine {
 			};
 		};
 
-		Object(const Camera &camera, const MovementParameters &movementParameters);
+		Object(const Camera &camera, const MovementParameters &movementParameters, SDL_Texture *texture);
 		~Object();
 
-		const Camera &getCamera(void);
-
-		MovementState getMovementState(void);
+		const Camera &getCamera(void) const;
+		MovementState getMovementState(void) const;
+		SDL_Texture *getTexture(void) const ;
 
 		void move(double delta); // Move in current direction (or backwards if delta is negative).
 		void strafe(double delta); // Move perpendicular to direction (left is delta is negative, right if positive).
@@ -54,6 +57,8 @@ namespace TremorEngine {
 		Camera camera; // even for objects which cannot 'see' this is still used for position and rotation
 
 		MovementData movementData;
+
+		SDL_Texture *texture;
 	};
 
 };

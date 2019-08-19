@@ -1,7 +1,7 @@
 #include "object.h"
 
 namespace TremorEngine {
-	Object::Object(const Camera &camera, const MovementParameters &movementParameters): camera(camera) {
+	Object::Object(const Camera &camera, const MovementParameters &movementParameters, SDL_Texture *texture): camera(camera), texture(texture) {
 		movementData.parameters=movementParameters;
 		movementData.state=MovementState::Standard;
 	}
@@ -9,12 +9,16 @@ namespace TremorEngine {
 	Object::~Object() {
 	}
 
-	const Camera &Object::getCamera(void) {
+	const Camera &Object::getCamera(void) const {
 		return camera;
 	}
 
-	Object::MovementState Object::getMovementState(void) {
+	Object::MovementState Object::getMovementState(void) const {
 		return movementData.state;
+	}
+
+	SDL_Texture *Object::getTexture(void) const {
+		return texture;
 	}
 
 	void Object::move(double delta) {

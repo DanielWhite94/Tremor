@@ -87,7 +87,7 @@ Map::Map(SDL_Renderer *renderer): renderer(renderer) {
 	// Create objects
 	Camera barrelCamera(0.768908,9.275132,0.500000,7.947846);
 	Object::MovementParameters barrelMovementParameters={.standHeight=0.3};
-	objectBarrel=new Object(barrelCamera, barrelMovementParameters);
+	objectBarrel=new Object(barrelCamera, barrelMovementParameters, textureBarrel);
 }
 
 Map::~Map() {
