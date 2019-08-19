@@ -106,7 +106,7 @@ void demoInit(void) {
 	renderer=new Renderer(sdlRenderer, windowWidth, windowHeight, unitBlockHeight, &mapGetBlockInfoFunctor, map, &mapGetObjectsInRangeFunctor, map);
 
 	// Create player object
-	playerObject=new Object(playerCameraStart, playerMovementParametersStart, NULL);
+	playerObject=new Object(0.3, 0.6, playerCameraStart, playerMovementParametersStart, NULL);
 }
 
 void demoQuit(void) {

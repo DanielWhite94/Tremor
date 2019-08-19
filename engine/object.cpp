@@ -1,12 +1,20 @@
 #include "object.h"
 
 namespace TremorEngine {
-	Object::Object(const Camera &camera, const MovementParameters &movementParameters, SDL_Texture *texture): camera(camera), texture(texture) {
+	Object::Object(double width, double height, const Camera &camera, const MovementParameters &movementParameters, SDL_Texture *texture): width(width), height(height), camera(camera), texture(texture) {
 		movementData.parameters=movementParameters;
 		movementData.state=MovementState::Standard;
 	}
 
 	Object::~Object() {
+	}
+
+	double Object::getWidth(void) const {
+		return width;
+	}
+
+	double Object::getHeight(void) const {
+		return height;
 	}
 
 	const Camera &Object::getCamera(void) const {

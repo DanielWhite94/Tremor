@@ -37,9 +37,11 @@ namespace TremorEngine {
 			};
 		};
 
-		Object(const Camera &camera, const MovementParameters &movementParameters, SDL_Texture *texture);
+		Object(double width, double height, const Camera &camera, const MovementParameters &movementParameters, SDL_Texture *texture);
 		~Object();
 
+		double getWidth(void) const;
+		double getHeight(void) const;
 		const Camera &getCamera(void) const;
 		MovementState getMovementState(void) const;
 		SDL_Texture *getTexture(void) const ;
@@ -54,6 +56,8 @@ namespace TremorEngine {
 
 		void tick(void);
 	private:
+		double width, height; // width is size in x-direction (regardless of rotation), height is vertical size, where for both 1.0 represents the size of the unit block
+
 		Camera camera; // even for objects which cannot 'see' this is still used for position and rotation
 
 		MovementData movementData;
