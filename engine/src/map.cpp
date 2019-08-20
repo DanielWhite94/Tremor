@@ -60,9 +60,19 @@ namespace TremorEngine {
 		if (mapX<0 || mapX>=width || mapY<0 || mapY>=height)
 			return false;
 
-		// Grab block info
-		// TODO: this
-		return false;
+		// Grab block data
+		const Block *block=&blocks[mapX+width*mapY];
+
+		// Empty block?
+		if (block->height==0.0)
+			return false;
+
+		// Fill block info struct
+		info->height=block->height;
+		info->colour=block->colour;
+		info->texture=getTextureById(block->textureId);
+
+		return true;
 	}
 
 	std::vector<Object *> *Map::getObjectsInRangeFunctor(const Camera &camera) {
