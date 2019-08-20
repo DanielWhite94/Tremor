@@ -66,6 +66,14 @@ namespace TremorEngine {
 		brightnessMax=value;
 	}
 
+	void Renderer::setGroundColour(const Colour &colour) {
+		colourGround=colour;
+	}
+
+	void Renderer::setSkyColour(const Colour &colour) {
+		colourSky=colour;
+	}
+
 	void Renderer::render(const Camera &camera, bool drawZBuffer) {
 		// Calculate various useful values.
 		double screenDist=camera.getScreenDistance(windowWidth);
