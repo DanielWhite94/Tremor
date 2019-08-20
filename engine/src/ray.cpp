@@ -87,10 +87,10 @@ namespace TremorEngine {
 		}
 		intersectionX-=floor((intersectionX));
 
-		int textureX=(int)floor(intersectionX*textureW);
-		if(side==Side::Vertical && rayDirX > 0)
+		int textureX=textureW-((int)floor(intersectionX*textureW))-1;
+		if (side==Side::Vertical && rayDirX>0)
 			textureX=textureW-textureX-1;
-		if(side==Side::Horizontal && rayDirY < 0)
+		if (side==Side::Horizontal && rayDirY<0)
 			textureX=textureW-textureX-1;
 
 		return textureX;
