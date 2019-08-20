@@ -68,27 +68,27 @@ Map::Map(SDL_Renderer *renderer): renderer(renderer) {
 	// TODO: better error handling than exit
 
 	// Load textures
-	textureWall1=IMG_LoadTexture(renderer, "images/wall1.png");
-	if (textureWall1==NULL) {
-		printf("Could not created load texture at '%s': %s\n", "images/wall1.png", SDL_GetError());
+	textureWall1=new Texture(renderer, "images/wall1.png");
+	if (textureWall1==NULL || !textureWall1->getHasInit()) {
+		printf("Could not create texture from file at '%s': %s\n", "images/wall1.png", SDL_GetError());
 		exit(EXIT_FAILURE);
 	}
-	textureWall2=IMG_LoadTexture(renderer, "images/wall2.png");
-	if (textureWall2==NULL) {
-		printf("Could not created load texture at '%s': %s\n", "images/wall2.png", SDL_GetError());
+	textureWall2=new Texture(renderer, "images/wall2.png");
+	if (textureWall2==NULL || !textureWall2->getHasInit()) {
+		printf("Could not create texture from file at '%s': %s\n", "images/wall2.png", SDL_GetError());
 		exit(EXIT_FAILURE);
 	}
-	textureBarrel=IMG_LoadTexture(renderer, "images/barrel.png");
-	if (textureBarrel==NULL) {
-		printf("Could not created load texture at '%s': %s\n", "images/barrel.png", SDL_GetError());
+	textureBarrel=new Texture(renderer, "images/barrel.png");
+	if (textureBarrel==NULL || !textureBarrel->getHasInit()) {
+		printf("Could not create texture from file at '%s': %s\n", "images/barrel.png", SDL_GetError());
 		exit(EXIT_FAILURE);
 	}
 	for(int i=0; i<8; ++i) {
 		char path[1024]; // TODO: better
 		sprintf(path, "images/lois/%i.png", i);
-		textureLois[i]=IMG_LoadTexture(renderer, path);
-		if (textureLois[i]==NULL) {
-			printf("Could not created load texture at '%s': %s\n", path, SDL_GetError());
+		textureLois[i]=new Texture(renderer, path);
+		if (textureLois[i]==NULL || !textureLois[i]->getHasInit()) {
+			printf("Could not create texture from file at '%s': %s\n", path, SDL_GetError());
 			exit(EXIT_FAILURE);
 		}
 	}
@@ -107,9 +107,9 @@ Map::Map(SDL_Renderer *renderer): renderer(renderer) {
 }
 
 Map::~Map() {
-	SDL_DestroyTexture(textureWall1);
-	SDL_DestroyTexture(textureWall2);
-	SDL_DestroyTexture(textureBarrel);
+	delete textureWall1;
+	delete textureWall2;
+	delete textureBarrel;
 
 	delete objectBarrel;
 }

@@ -7,14 +7,14 @@ namespace TremorEngine {
 	Object::Object(double width, double height, const Camera &camera, const MovementParameters &movementParameters): width(width), height(height), camera(camera) {
 		movementData.parameters=movementParameters;
 		movementData.state=MovementState::Standard;
-		textures=new std::vector<SDL_Texture *>;
+		textures=new std::vector<Texture *>;
 	}
 
 	Object::~Object() {
 		delete textures;
 	}
 
-	void Object::addTexture(SDL_Texture *texture) {
+	void Object::addTexture(Texture *texture) {
 		textures->push_back(texture);
 	}
 
@@ -38,14 +38,14 @@ namespace TremorEngine {
 		return textures->size();
 	}
 
-	SDL_Texture *Object::getTextureN(int n) const {
+	Texture *Object::getTextureN(int n) const {
 		if (n<0 || n>=getTextureCount())
 			return NULL;
 
 		return (*textures)[n];
 	}
 
-	SDL_Texture *Object::getTextureAngle(double angle) const {
+	Texture *Object::getTextureAngle(double angle) const {
 		// TODO: this seems convoluted and can no doubt be improved
 		double fraction=angleNormalise(angle)/(2.0*M_PI)-0.25;
 		if (fraction<0)

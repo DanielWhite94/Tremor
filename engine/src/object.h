@@ -7,6 +7,7 @@
 #include <SDL2/SDL_image.h>
 
 #include "camera.h"
+#include "texture.h"
 #include "util.h"
 
 namespace TremorEngine {
@@ -42,15 +43,15 @@ namespace TremorEngine {
 		Object(double width, double height, const Camera &camera, const MovementParameters &movementParameters);
 		~Object();
 
-		void addTexture(SDL_Texture *texture);
+		void addTexture(Texture *texture);
 
 		double getWidth(void) const;
 		double getHeight(void) const;
 		const Camera &getCamera(void) const;
 		MovementState getMovementState(void) const;
 		int getTextureCount(void) const ;
-		SDL_Texture *getTextureN(int n) const ;
-		SDL_Texture *getTextureAngle(double angle) const ;
+		Texture *getTextureN(int n) const ;
+		Texture *getTextureAngle(double angle) const ;
 
 		void move(double delta); // Move in current direction (or backwards if delta is negative).
 		void strafe(double delta); // Move perpendicular to direction (left is delta is negative, right if positive).
@@ -68,7 +69,7 @@ namespace TremorEngine {
 
 		MovementData movementData;
 
-		std::vector<SDL_Texture *> *textures;
+		std::vector<Texture *> *textures;
 	};
 
 };

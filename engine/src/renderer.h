@@ -18,7 +18,7 @@ namespace TremorEngine {
 		struct BlockInfo {
 			double height;
 			Colour colour; // should always be set - used for top of block at the very least
-			SDL_Texture *texture; // texture for block walls, if NULL then colour is used instead
+			Texture *texture; // texture for block walls, if NULL then colour is used instead
 		};
 
 		typedef bool (GetBlockInfoFunctor)(int mapX, int mapY, BlockInfo *info, void *userData); // should return false if no such block

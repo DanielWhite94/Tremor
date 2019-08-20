@@ -122,8 +122,7 @@ namespace TremorEngine {
 				slices[slicesNext].blockDisplayBase=computeBlockDisplayBase(slices[slicesNext].distance, cameraZScreenAdjustment, cameraPitchScreenAdjustment);
 				slices[slicesNext].blockDisplayHeight=computeBlockDisplayHeight(slices[slicesNext].blockInfo.height, slices[slicesNext].distance);
 				if (slices[slicesNext].blockInfo.texture!=NULL) {
-					int textureW;
-					SDL_QueryTexture(slices[slicesNext].blockInfo.texture, NULL, NULL, &textureW, NULL);
+					int textureW=slices[slicesNext].blockInfo.texture->getWidth();
 					slices[slicesNext].blockTextureX=ray.getTextureX(textureW);
 				}
 
@@ -162,15 +161,12 @@ namespace TremorEngine {
 						// Textured block
 						// Note: we always ask the renderer to draw the whole slice - even if say we are very close to a block and so most of the slice is not visible anyway - hoping that it interally optimises the blit.
 
-						int textureW, textureH;
-						SDL_QueryTexture(slices[slicesNext].blockInfo.texture, NULL, NULL, &textureW, &textureH);
-
 						uint8_t colourMod=(slices[slicesNext].intersectionSide==Ray::Side::Horizontal ? 153 : 255);
-						SDL_SetTextureColorMod(slices[slicesNext].blockInfo.texture, colourMod, colourMod, colourMod); // make edges/corners between horizontal and vertical walls clearer
+						SDL_SetTextureColorMod(slices[slicesNext].blockInfo.texture->getSdlTexture(), colourMod, colourMod, colourMod); // make edges/corners between horizontal and vertical walls clearer
 
-						SDL_Rect srcRect={.x=slices[slicesNext].blockTextureX, .y=0, .w=1, .h=textureH};
+						SDL_Rect srcRect={.x=slices[slicesNext].blockTextureX, .y=0, .w=1, .h=slices[slicesNext].blockInfo.texture->getHeight()};
 						SDL_Rect destRect={.x=x, .y=slices[slicesNext].blockDisplayBase-slices[slicesNext].blockDisplayHeight, .w=1, .h=slices[slicesNext].blockDisplayHeight};
-						SDL_RenderCopy(renderer, slices[slicesNext].blockInfo.texture, &srcRect, &destRect);
+						SDL_RenderCopy(renderer, slices[slicesNext].blockInfo.texture->getSdlTexture(), &srcRect, &destRect);
 					} else {
 						// Solid colour block
 
@@ -260,15 +256,12 @@ namespace TremorEngine {
 
 			// Grab texture info and compute factors used to map screen pixels to texture pixels.
 			double objectVisibleAngle=object->getCamera().getYaw()+objectAngleDirect;
-			SDL_Texture *objectTexture=object->getTextureAngle(objectVisibleAngle);
+			Texture *objectTexture=object->getTextureAngle(objectVisibleAngle);
 			if (objectTexture==NULL)
 				continue;
 
-			int textureW, textureH;
-			SDL_QueryTexture(objectTexture, NULL, NULL, &textureW, &textureH);
-
-			double textureXFactor=((double)textureW)/objectScreenW;
-			double textureYFactor=((double)textureH)/objectScreenH;
+			double textureXFactor=((double)objectTexture->getWidth())/objectScreenW;
+			double textureYFactor=((double)objectTexture->getHeight())/objectScreenH;
 
 			int textureExtractW=(textureXFactor>1.0 ? floor(textureXFactor) : 1);
 			int textureExtractH=(textureYFactor>1.0 ? floor(textureYFactor) : 1);
@@ -300,7 +293,7 @@ namespace TremorEngine {
 						int textureExtractX=tx*textureXFactor;
 						SDL_Rect srcRect={.x=textureExtractX, .y=textureExtractY, .w=textureExtractW, .h=textureExtractH};
 						SDL_Rect destRect={.x=sx, .y=sy, .w=1, .h=1};
-						SDL_RenderCopy(renderer, objectTexture, &srcRect, &destRect);
+						SDL_RenderCopy(renderer, objectTexture->getSdlTexture(), &srcRect, &destRect);
 					}
 				}
 			}

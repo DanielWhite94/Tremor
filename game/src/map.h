@@ -22,10 +22,10 @@ public:
 private:
 	SDL_Renderer *renderer;
 
-	SDL_Texture *textureWall1;
-	SDL_Texture *textureWall2;
-	SDL_Texture *textureBarrel;
-	SDL_Texture *textureLois[8];
+	Texture *textureWall1;
+	Texture *textureWall2;
+	Texture *textureBarrel;
+	Texture *textureLois[8];
 
 	Object *objectBarrel;
 	Object *objectLois;

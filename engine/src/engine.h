@@ -10,6 +10,7 @@
 #include "object.h"
 #include "ray.h"
 #include "renderer.h"
+#include "texture.h"
 #include "util.h"
 
 #endif
