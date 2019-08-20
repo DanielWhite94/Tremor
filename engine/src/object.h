@@ -1,7 +1,13 @@
 #ifndef TREMORENGINE_OBJECT_H
 #define TREMORENGINE_OBJECT_H
 
+#include <vector>
+
+#include <SDL2/SDL.h>
+#include <SDL2/SDL_image.h>
+
 #include "camera.h"
+#include "texture.h"
 #include "util.h"
 
 namespace TremorEngine {
@@ -34,12 +40,18 @@ namespace TremorEngine {
 			};
 		};
 
-		Object(const Camera &camera, const MovementParameters &movementParameters);
+		Object(double width, double height, const Camera &camera, const MovementParameters &movementParameters);
 		~Object();
 
-		const Camera &getCamera(void);
+		void addTexture(Texture *texture);
 
-		MovementState getMovementState(void);
+		double getWidth(void) const;
+		double getHeight(void) const;
+		const Camera &getCamera(void) const;
+		MovementState getMovementState(void) const;
+		int getTextureCount(void) const ;
+		Texture *getTextureN(int n) const ;
+		Texture *getTextureAngle(double angle) const ;
 
 		void move(double delta); // Move in current direction (or backwards if delta is negative).
 		void strafe(double delta); // Move perpendicular to direction (left is delta is negative, right if positive).
@@ -51,9 +63,13 @@ namespace TremorEngine {
 
 		void tick(void);
 	private:
+		double width, height; // width is size in x-direction (regardless of rotation), height is vertical size, where for both 1.0 represents the size of the unit block
+
 		Camera camera; // even for objects which cannot 'see' this is still used for position and rotation
 
 		MovementData movementData;
+
+		std::vector<Texture *> *textures;
 	};
 
 };

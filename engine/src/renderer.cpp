@@ -1,6 +1,7 @@
 #include <cassert>
 #include <cmath>
 #include <limits>
+#include <algorithm>
 
 #include <SDL2/SDL2_gfxPrimitives.h>
 
@@ -8,10 +9,32 @@
 #include "renderer.h"
 
 namespace TremorEngine {
-	Renderer::Renderer(SDL_Renderer *renderer, int windowWidth, int windowHeight, double unitBlockHeight, GetBlockInfoFunctor *getBlockInfoFunctor, void *getBlockInfoUserData): renderer(renderer), windowWidth(windowWidth), windowHeight(windowHeight), unitBlockHeight(unitBlockHeight), getBlockInfoFunctor(getBlockInfoFunctor), getBlockInfoUserData(getBlockInfoUserData) {
-		colourBg.r=255; colourBg.g=0; colourBg.b=255; // Pink (to help identify any undrawn regions).
-		colourGround.r=0; colourGround.g=255; colourGround.b=0; // Green.
-		colourSky.r=0; colourSky.g=0; colourSky.b=255; // Blue.
+	struct RendererCompareObjectsByDistance {
+		RendererCompareObjectsByDistance(const Camera &camera): camera(camera) {
+		}
+
+		~RendererCompareObjectsByDistance() {
+		}
+
+		bool operator() (Object *i, Object *j) {
+			double iDx=i->getCamera().getX()-camera.getX();
+			double iDy=i->getCamera().getY()-camera.getY();
+			double iDist2=(iDx*iDx+iDy*iDy);
+
+			double jDx=j->getCamera().getX()-camera.getX();
+			double jDy=j->getCamera().getY()-camera.getY();
+			double jDist2=(jDx*jDx+jDy*jDy);
+
+			return (iDist2>=jDist2);
+		}
+
+		const Camera &camera;
+	};
+
+	Renderer::Renderer(SDL_Renderer *renderer, int windowWidth, int windowHeight, double unitBlockHeight, GetBlockInfoFunctor *getBlockInfoFunctor, void *getBlockInfoUserData, GetObjectsInRangeFunctor *getObjectsInRangeFunctor, void *getObjectsInRangeUserData): renderer(renderer), windowWidth(windowWidth), windowHeight(windowHeight), unitBlockHeight(unitBlockHeight), getBlockInfoFunctor(getBlockInfoFunctor), getBlockInfoUserData(getBlockInfoUserData), getObjectsInRangeFunctor(getObjectsInRangeFunctor), getObjectsInRangeUserData(getObjectsInRangeUserData) {
+		colourBg.r=255; colourBg.g=0; colourBg.b=255; colourBg.a=255; // Pink (to help identify any undrawn regions).
+		colourGround.r=0; colourGround.g=255; colourGround.b=0; colourGround.a=255; // Green.
+		colourSky.r=0; colourSky.g=0; colourSky.b=255; colourSky.a=255; // Blue.
 
 		zBuffer=(double *)malloc(sizeof(double)*windowWidth*windowHeight);
 	}
@@ -22,7 +45,7 @@ namespace TremorEngine {
 
 	void Renderer::render(const Camera &camera, bool drawZBuffer) {
 		// Calculate various useful values.
-		double screenDist=windowWidth/(2*tan(camera.getFov()/2));
+		double screenDist=camera.getScreenDistance(windowWidth);
 
 		int cameraZScreenAdjustment=(camera.getZ()-0.5)*unitBlockHeight;
 
@@ -40,7 +63,7 @@ namespace TremorEngine {
 			zBuffer[i]=std::numeric_limits<double>::max();
 
 		// Clear surface.
-		SDL_SetRenderDrawColor(renderer, colourBg.r, colourBg.g, colourBg.b, 255);
+		SDL_SetRenderDrawColor(renderer, colourBg.r, colourBg.g, colourBg.b, colourBg.a);
 		SDL_Rect rect={0, 0, windowWidth, windowHeight};
 		SDL_RenderFillRect(renderer, &rect);
 
@@ -56,7 +79,7 @@ namespace TremorEngine {
 				// Sky
 				colour=colourSky;
 				colourAdjustForDistance(colour, distance);
-				SDL_SetRenderDrawColor(renderer, colour.r, colour.g, colour.b, 255);
+				SDL_SetRenderDrawColor(renderer, colour.r, colour.g, colour.b, colour.a);
 				SDL_RenderDrawLine(renderer, 0, y, windowWidth, y);
 			} else {
 				// Calculate distance in order to adjust colour.
@@ -65,7 +88,7 @@ namespace TremorEngine {
 				// Ground
 				colour=colourGround;
 				colourAdjustForDistance(colour, distance);
-				SDL_SetRenderDrawColor(renderer, colour.r, colour.g, colour.b, 255);
+				SDL_SetRenderDrawColor(renderer, colour.r, colour.g, colour.b, colour.a);
 				SDL_RenderDrawLine(renderer, 0, y, windowWidth, y);
 			}
 		}
@@ -99,8 +122,7 @@ namespace TremorEngine {
 				slices[slicesNext].blockDisplayBase=computeBlockDisplayBase(slices[slicesNext].distance, cameraZScreenAdjustment, cameraPitchScreenAdjustment);
 				slices[slicesNext].blockDisplayHeight=computeBlockDisplayHeight(slices[slicesNext].blockInfo.height, slices[slicesNext].distance);
 				if (slices[slicesNext].blockInfo.texture!=NULL) {
-					int textureW;
-					SDL_QueryTexture(slices[slicesNext].blockInfo.texture, NULL, NULL, &textureW, NULL);
+					int textureW=slices[slicesNext].blockInfo.texture->getWidth();
 					slices[slicesNext].blockTextureX=ray.getTextureX(textureW);
 				}
 
@@ -139,15 +161,12 @@ namespace TremorEngine {
 						// Textured block
 						// Note: we always ask the renderer to draw the whole slice - even if say we are very close to a block and so most of the slice is not visible anyway - hoping that it interally optimises the blit.
 
-						int textureW, textureH;
-						SDL_QueryTexture(slices[slicesNext].blockInfo.texture, NULL, NULL, &textureW, &textureH);
-
 						uint8_t colourMod=(slices[slicesNext].intersectionSide==Ray::Side::Horizontal ? 153 : 255);
-						SDL_SetTextureColorMod(slices[slicesNext].blockInfo.texture, colourMod, colourMod, colourMod); // make edges/corners between horizontal and vertical walls clearer
+						SDL_SetTextureColorMod(slices[slicesNext].blockInfo.texture->getSdlTexture(), colourMod, colourMod, colourMod); // make edges/corners between horizontal and vertical walls clearer
 
-						SDL_Rect srcRect={.x=slices[slicesNext].blockTextureX, .y=0, .w=1, .h=textureH};
+						SDL_Rect srcRect={.x=slices[slicesNext].blockTextureX, .y=0, .w=1, .h=slices[slicesNext].blockInfo.texture->getHeight()};
 						SDL_Rect destRect={.x=x, .y=slices[slicesNext].blockDisplayBase-slices[slicesNext].blockDisplayHeight, .w=1, .h=slices[slicesNext].blockDisplayHeight};
-						SDL_RenderCopy(renderer, slices[slicesNext].blockInfo.texture, &srcRect, &destRect);
+						SDL_RenderCopy(renderer, slices[slicesNext].blockInfo.texture->getSdlTexture(), &srcRect, &destRect);
 					} else {
 						// Solid colour block
 
@@ -158,7 +177,7 @@ namespace TremorEngine {
 						colourAdjustForDistance(blockDisplayColour, slices[slicesNext].distance);
 
 						// Draw block
-						SDL_SetRenderDrawColor(renderer, blockDisplayColour.r, blockDisplayColour.g, blockDisplayColour.b, 255);
+						SDL_SetRenderDrawColor(renderer, blockDisplayColour.r, blockDisplayColour.g, blockDisplayColour.b, blockDisplayColour.a);
 						SDL_RenderDrawLine(renderer, x, slices[slicesNext].blockDisplayBase-slices[slicesNext].blockDisplayHeight, x, slices[slicesNext].blockDisplayBase);
 					}
 				}
@@ -181,7 +200,7 @@ namespace TremorEngine {
 					if (!drawZBuffer) {
 						Colour blockTopDisplayColour=slices[slicesNext].blockInfo.colour;
 						blockTopDisplayColour.mul(1.05);
-						SDL_SetRenderDrawColor(renderer, blockTopDisplayColour.r, blockTopDisplayColour.g, blockTopDisplayColour.b, 255);
+						SDL_SetRenderDrawColor(renderer, blockTopDisplayColour.r, blockTopDisplayColour.g, blockTopDisplayColour.b, blockTopDisplayColour.a);
 						SDL_RenderDrawLine(renderer, x, blockDisplayTop-slices[slicesNext].blockDisplayTopSize, x, blockDisplayTop);
 					}
 
@@ -205,6 +224,77 @@ namespace TremorEngine {
 
 			#undef SlicesMax
 		}
+
+		// Draw object sprites
+		std::vector<Object *> *objects=getObjectsInRangeFunctor(camera, getObjectsInRangeUserData);
+
+		RendererCompareObjectsByDistance compareObjectsByDistance(camera);
+		std::sort(objects->begin(), objects->end(), compareObjectsByDistance); // sort so that we paint closer objects over the top of further away ones (the z buffer is not enough if textures are partially transparent)
+
+		for(auto object : *objects) {
+			// Determine angle (and distance) from camera to object, and skip drawing if object is behind camera.
+			double objectVisibleAngle, objectBearing, objectDistance;
+			camera.getTargetInfo(object->getCamera(), &objectVisibleAngle, &objectBearing, &objectDistance);
+
+			objectBearing=angleNormalise(objectBearing);
+			if (objectBearing<0.5*M_PI || objectBearing>1.5*M_PI)
+				continue;
+
+			// Determine x-coordinate of screen where object should appear, and its width.
+			// Skip drawing if zero-width or off screen (too far left or right).
+			int objectCentreScreenX=tan(objectBearing)*screenDist+windowWidth/2;
+			int objectScreenW=computeBlockDisplayHeight(object->getWidth(), objectDistance);
+			if (objectScreenW<=0 || objectCentreScreenX+objectScreenW/2<0 || objectCentreScreenX-objectScreenW/2>=windowWidth)
+				continue;
+
+			// Compute base and height of object on screen, and skip drawing if zero-height or off screen (too high/low).
+			int objectScreenBase=computeBlockDisplayBase(objectDistance, cameraZScreenAdjustment, cameraPitchScreenAdjustment);
+			int objectScreenH=computeBlockDisplayHeight(object->getHeight(), objectDistance);
+			if (objectScreenH<=0 || objectScreenBase<0 || objectScreenBase-objectScreenH>=windowHeight)
+				continue;
+
+			// Grab texture info and compute factors used to map screen pixels to texture pixels.
+			Texture *objectTexture=object->getTextureAngle(objectVisibleAngle);
+			if (objectTexture==NULL)
+				continue;
+
+			double textureXFactor=((double)objectTexture->getWidth())/objectScreenW;
+			double textureYFactor=((double)objectTexture->getHeight())/objectScreenH;
+
+			// Loop over all pixels in the w/h region, deciding whether to paint each one.
+			// Loop over y values
+			for(int ty=0, sy=objectScreenBase-objectScreenH; ty<objectScreenH; ++ty, ++sy) {
+				// Column off screen?
+				if (sy<0 || sy>=windowHeight)
+					continue;
+
+				// Loop over x values
+				int textureExtractY=ty*textureYFactor;
+				for(int tx=0, sx=objectCentreScreenX-objectScreenW/2; tx<objectScreenW; ++tx, ++sx) {
+					// Pixel off screen?
+					if (sx<0 || sx>=windowWidth)
+						continue;
+
+					// z-buffer indicates object would not be visible?
+					if (objectDistance>zBuffer[sx+sy*windowWidth])
+						continue;
+
+					// Update z-buffer (no need if not drawing it - we already draw objects back-to-front anyway)
+					if (drawZBuffer)
+						zBuffer[sx+sy*windowWidth]=objectDistance;
+
+					// Draw pixel
+					if (!drawZBuffer) {
+						int textureExtractX=tx*textureXFactor;
+						Colour pixel=objectTexture->getPixel(textureExtractX, textureExtractY);
+						SDL_SetRenderDrawColor(renderer, pixel.r, pixel.g, pixel.b, pixel.a);
+						SDL_RenderDrawPoint(renderer, sx, sy);
+					}
+				}
+			}
+		}
+
+		delete objects;
 
 		// If needed draw z-buffer
 		if (drawZBuffer) {
@@ -255,7 +345,7 @@ namespace TremorEngine {
 					continue;
 
 				// Draw block
-				SDL_SetRenderDrawColor(renderer, blockInfo.colour.r, blockInfo.colour.g, blockInfo.colour.b, 255);
+				SDL_SetRenderDrawColor(renderer, blockInfo.colour.r, blockInfo.colour.g, blockInfo.colour.b, blockInfo.colour.a);
 				SDL_Rect rect={SX(x), SY(y), cellW/divisor, cellH/divisor};
 				SDL_RenderFillRect(renderer, &rect);
 			}

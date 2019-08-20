@@ -16,6 +16,15 @@ namespace TremorEngine {
 		double getPitch(void) const ;
 		double getFov(void) const ;
 		double getMaxDist(void) const ;
+		double getScreenDistance(int windowWidth) const ; // take our FOV and window width and determine how far the virtual screen must be from the camera
+
+		// For the following getTargetInfo functions, any of the out variables can be NULL if not interested in that value.
+		// visibleAngle represents which side of the target is showing to us
+		// bearingAngle is the bearing to reach target from camera
+		// note: yaw is only important if visibleAngle is requested
+		// note: returned angles are NOT normalised
+		void getTargetInfo(double x, double y, double yaw, double *visibleAngle, double *bearingAngle, double *distance) const;
+		void getTargetInfo(const Camera &otherCamera, double *visibleAngle, double *bearingAngle, double *distance) const;
 
 		void setX(double newX);
 		void setY(double newY);

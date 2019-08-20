@@ -95,6 +95,9 @@ void demoInit(void) {
 		exit(EXIT_FAILURE);
 	}
 
+	// Set blend mode to 'blend' so that rendering objects with transparency works.
+	SDL_SetRenderDrawBlendMode(sdlRenderer, SDL_BLENDMODE_BLEND);
+
 	// Turn on relative mouse mode to hide cursor and still generate relative changes when cursor hits the edge of the window.
 	SDL_SetRelativeMouseMode(SDL_TRUE);
 
@@ -103,10 +106,10 @@ void demoInit(void) {
 
 	// Create ray casting renderer
 	double unitBlockHeight=(512.0*windowWidth)/640.0;
-	renderer=new Renderer(sdlRenderer, windowWidth, windowHeight, unitBlockHeight, &mapGetBlockInfoFunctor, map);
+	renderer=new Renderer(sdlRenderer, windowWidth, windowHeight, unitBlockHeight, &mapGetBlockInfoFunctor, map, &mapGetObjectsInRangeFunctor, map);
 
 	// Create player object
-	playerObject=new Object(playerCameraStart, playerMovementParametersStart);
+	playerObject=new Object(0.3, 0.6, playerCameraStart, playerMovementParametersStart);
 }
 
 void demoQuit(void) {

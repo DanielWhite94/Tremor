@@ -1,4 +1,5 @@
 #include <cmath>
+#include <cstdlib>
 
 #include "camera.h"
 
@@ -34,6 +35,26 @@ namespace TremorEngine {
 
 	double Camera::getMaxDist(void) const {
 		return maxDist;
+	}
+
+	double Camera::getScreenDistance(int windowWidth) const {
+		return windowWidth/(2.0*tan(getFov()/2.0));
+	}
+
+	void Camera::getTargetInfo(double x, double y, double yaw, double *visibleAngle, double *bearingAngle, double *distance) const {
+		double dx=getX()-x;
+		double dy=getY()-y;
+
+		if (visibleAngle!=NULL)
+			*visibleAngle=atan2(dy, dx)+yaw;
+		if (bearingAngle!=NULL)
+			*bearingAngle=atan2(dy, dx)-getYaw();
+		if (distance!=NULL)
+			*distance=sqrt(dx*dx+dy*dy);
+	}
+
+	void Camera::getTargetInfo(const Camera &otherCamera, double *visibleAngle, double *bearingAngle, double *distance) const {
+		return getTargetInfo(otherCamera.getX(), otherCamera.getY(), otherCamera.getYaw(), visibleAngle, bearingAngle, distance);
 	}
 
 	void Camera::setX(double newX) {
