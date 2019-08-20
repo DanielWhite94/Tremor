@@ -22,12 +22,15 @@ namespace TremorEngine {
 		bool getBlockInfoFunctor(int mapX, int mapY, Renderer::BlockInfo *info);
 		std::vector<Object *> *getObjectsInRangeFunctor(const Camera &camera);
 
+		bool getHasInit(void);
 	private:
 		struct Block {
 			double height; // if set to 0.0 then no block here
 			Colour colour;
 			int textureId; // set to -1 if no texture
 		};
+
+		bool hasInit;
 
 		SDL_Renderer *renderer;
 

@@ -112,6 +112,10 @@ void demoInit(const char *mapFile) {
 
 	// Create map
 	map=new Map(sdlRenderer, mapFile);
+	if (!map->getHasInit()) {
+		printf("Could not load map at '%s'.\n", mapFile);
+		exit(EXIT_FAILURE);
+	}
 
 	// Create ray casting renderer
 	double unitBlockHeight=(512.0*windowWidth)/640.0;

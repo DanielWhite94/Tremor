@@ -20,15 +20,21 @@ namespace TremorEngine {
 	}
 
 	Map::Map(SDL_Renderer *renderer, int width, int height): renderer(renderer), width(width), height(height) {
+		hasInit=false;
+
 		// Allocate blocks array
 		blocks=(Block *)malloc(sizeof(Block)*width*height);
 
 		// Fill blocks array with height=0 to imply empty
 		for(unsigned i=0; i<width*height; ++i)
 			blocks[i].height=0.0;
+
+		// Done
+		hasInit=true;
 	}
 
 	Map::Map(SDL_Renderer *renderer, const char *file): renderer(renderer) {
+		hasInit=false;
 		// TODO: this
 		width=0;
 		height=0;
@@ -56,6 +62,10 @@ namespace TremorEngine {
 		// TODO: this
 
 		return list;
+	}
+
+	bool Map::getHasInit(void) {
+		return hasInit;
 	}
 
 };
