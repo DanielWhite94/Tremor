@@ -107,6 +107,8 @@ void demoInit(void) {
 	// Create ray casting renderer
 	double unitBlockHeight=(512.0*windowWidth)/640.0;
 	renderer=new Renderer(sdlRenderer, windowWidth, windowHeight, unitBlockHeight, &mapGetBlockInfoFunctor, map, &mapGetObjectsInRangeFunctor, map);
+	renderer->setBrightnessMin(0.5);
+	renderer->setBrightnessMax(1.0);
 
 	// Create player object
 	playerObject=new Object(0.3, 0.6, playerCameraStart, playerMovementParametersStart);

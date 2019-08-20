@@ -27,6 +27,13 @@ namespace TremorEngine {
 		Renderer(SDL_Renderer *renderer, int windowWidth, int windowHeight, double unitBlockHeight, GetBlockInfoFunctor *getBlockInfoFunctor, void *getBlockInfoUserData, GetObjectsInRangeFunctor *getObjectsInRangeFunctor, void *getObjectsInRangeUserData);
 		~Renderer();
 
+		double getBrightnessMin(void) const;
+		double getBrightnessMax(void) const;
+
+		// brightness values should be in interval [0.0,1.0]
+		void setBrightnessMin(double value);
+		void setBrightnessMax(double value);
+
 		void render(const Camera &camera, bool drawZBuffer); // if drawZBuffer is true then all standard rendering logic is carried out, and then at the very end we draw a heatmap of the z-buffer over the top
 		void renderTopDown(const Camera &camera);
 
@@ -55,6 +62,13 @@ namespace TremorEngine {
 		void *getObjectsInRangeUserData;
 
 		Colour colourBg, colourGround, colourSky;
+
+		// These values control the brightness levels.
+		// Default values are (min,max)=(0.0,1.0).
+		// Example values:
+		// dim space - (0.0,0.5)
+		// bright space - (0.5,1.0)
+		double brightnessMin, brightnessMax;
 
 		double *zBuffer; // windowWidth*windowHeight number of entries
 
