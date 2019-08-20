@@ -160,6 +160,7 @@ namespace TremorEngine {
 		free(blocks);
 
 		// Free textures vector
+		// TODO: delete all entries also?
 		delete textures;
 	}
 
