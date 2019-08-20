@@ -159,7 +159,7 @@ namespace TremorEngine {
 	}
 
 	Texture *Map::getTextureById(int id) {
-		if (id<0 || id>textures->size())
+		if (id<0 || id>=textures->size())
 			return NULL;
 		return textures->at(id);
 	}
