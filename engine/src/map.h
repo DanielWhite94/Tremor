@@ -24,6 +24,8 @@ namespace TremorEngine {
 
 		bool getHasInit(void);
 		Texture *getTextureById(int id);
+		int getWidth(void) const;
+		int getHeight(void) const;
 
 		bool addTexture(int id, const char *path);
 	private:

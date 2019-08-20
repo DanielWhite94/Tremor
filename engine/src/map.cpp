@@ -263,6 +263,14 @@ namespace TremorEngine {
 		return textures->at(id);
 	}
 
+	int Map::getWidth(void) const {
+		return width;
+	}
+
+	int Map::getHeight(void) const {
+		return height;
+	}
+
 	bool Map::addTexture(int id, const char *path) {
 		// Does a texture already exist with this id?
 		if (getTextureById(id)!=NULL)
