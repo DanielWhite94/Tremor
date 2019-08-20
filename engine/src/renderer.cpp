@@ -290,6 +290,7 @@ namespace TremorEngine {
 					if (!drawZBuffer) {
 						int textureExtractX=tx*textureXFactor;
 						Colour pixel=objectTexture->getPixel(textureExtractX, textureExtractY);
+						colourAdjustForDistance(pixel, objectDistance);
 						SDL_SetRenderDrawColor(renderer, pixel.r, pixel.g, pixel.b, pixel.a);
 						SDL_RenderDrawPoint(renderer, sx, sy);
 					}
