@@ -263,9 +263,6 @@ namespace TremorEngine {
 			double textureXFactor=((double)objectTexture->getWidth())/objectScreenW;
 			double textureYFactor=((double)objectTexture->getHeight())/objectScreenH;
 
-			int textureExtractW=(textureXFactor>1.0 ? floor(textureXFactor) : 1);
-			int textureExtractH=(textureYFactor>1.0 ? floor(textureYFactor) : 1);
-
 			// Loop over all pixels in the w/h region, deciding whether to paint each one.
 			// Loop over y values
 			for(int ty=0, sy=objectScreenBase-objectScreenH; ty<objectScreenH; ++ty, ++sy) {
@@ -291,9 +288,9 @@ namespace TremorEngine {
 					// Draw pixel
 					if (!drawZBuffer) {
 						int textureExtractX=tx*textureXFactor;
-						SDL_Rect srcRect={.x=textureExtractX, .y=textureExtractY, .w=textureExtractW, .h=textureExtractH};
-						SDL_Rect destRect={.x=sx, .y=sy, .w=1, .h=1};
-						SDL_RenderCopy(renderer, objectTexture->getSdlTexture(), &srcRect, &destRect);
+						Colour pixel=objectTexture->getPixel(textureExtractX, textureExtractY);
+						SDL_SetRenderDrawColor(renderer, pixel.r, pixel.g, pixel.b, pixel.a);
+						SDL_RenderDrawPoint(renderer, sx, sy);
 					}
 				}
 			}
