@@ -18,8 +18,6 @@ const double turnFactor=0.0006;
 const double verticalTurnFactor=0.0004;
 const Object::MovementParameters playerMovementParametersStart={.jumpTime=1000000llu, .standHeight=0.5, .crouchHeight=0.3, .jumpHeight=0.3};
 
-const Camera playerCameraStart(-5.928415,10.382321,0.500000,6.261246);
-
 // Variables
 SDL_Window *window;
 SDL_Renderer *sdlRenderer;
@@ -124,7 +122,8 @@ void demoInit(const char *mapFile) {
 	renderer->setBrightnessMax(1.0);
 
 	// Create player object
-	playerObject=new Object(0.3, 0.6, playerCameraStart, playerMovementParametersStart);
+	Camera playerCamera(map->getWidth()/2.0, map->getHeight()/2.0, playerMovementParametersStart.standHeight, 0.0);
+	playerObject=new Object(0.3, 0.6, playerCamera, playerMovementParametersStart);
 }
 
 void demoQuit(void) {
