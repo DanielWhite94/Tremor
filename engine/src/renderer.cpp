@@ -37,10 +37,33 @@ namespace TremorEngine {
 		colourSky.r=0; colourSky.g=0; colourSky.b=255; colourSky.a=255; // Blue.
 
 		zBuffer=(double *)malloc(sizeof(double)*windowWidth*windowHeight);
+
+		brightnessMin=0.0;
+		brightnessMax=1.0;
 	}
 
 	Renderer::~Renderer() {
 		free(zBuffer);
+	}
+
+	double Renderer::getBrightnessMin(void) const {
+		return brightnessMin;
+	}
+
+	double Renderer::getBrightnessMax(void) const {
+		return brightnessMax;
+	}
+
+	void Renderer::setBrightnessMin(double value) {
+		assert(value>=0.0 && value<=1.0);
+
+		brightnessMin=value;
+	}
+
+	void Renderer::setBrightnessMax(double value) {
+		assert(value>=0.0 && value<=1.0);
+
+		brightnessMax=value;
 	}
 
 	void Renderer::render(const Camera &camera, bool drawZBuffer) {
@@ -407,7 +430,8 @@ namespace TremorEngine {
 	}
 
 	double Renderer::colourDistanceFactor(double distance) const {
-		return (distance>1.0 ? 1.0/sqrt(distance) : 1.0);
+		double distanceFactor=(distance>1.0 ? 1.0/sqrt(distance) : 1.0);
+		return brightnessMin+distanceFactor*(brightnessMax-brightnessMin);
 	}
 
 	void Renderer::colourAdjustForDistance(Colour &colour, double distance) const {
