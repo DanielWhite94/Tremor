@@ -5,9 +5,9 @@
 
 class Colour {
 public:
-	uint8_t r, g, b;
+	uint8_t r, g, b, a;
 
-	void mul(double factor);
+	void mul(double factor); // does not affect alpha
 };
 
 #endif

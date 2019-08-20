@@ -6,21 +6,21 @@
 #define MapW 16
 #define MapH 16
 #define _ {.height=0.0, .texture=NULL}
-#define w {.height=1.1, .colour={.r=128, .g=128, .b=128}, .texture=NULL}
-#define W {.height=0.7, .colour={.r=120, .g=120, .b=120}, .texture=NULL}
-#define D {.height=1.4, .colour={.r=120, .g=120, .b=120}, .texture=NULL}
-#define T {.height=2.1, .colour={.r=120, .g=120, .b=120}, .texture=NULL}
-#define H {.height=2.8, .colour={.r=120, .g=120, .b=120}, .texture=NULL}
-#define B {.height=1.5, .colour={.r=235, .g=50, .b=52}, .texture=NULL}
-#define s1 {.height=0.1, .colour={.r=177, .g=3, .b=252}, .texture=NULL}
-#define s2 {.height=0.2, .colour={.r=177, .g=3, .b=252}, .texture=NULL}
-#define s3 {.height=0.3, .colour={.r=177, .g=3, .b=252}, .texture=NULL}
-#define s4 {.height=0.4, .colour={.r=177, .g=3, .b=252}, .texture=NULL}
-#define s5 {.height=0.5, .colour={.r=177, .g=3, .b=252}, .texture=NULL}
-#define s6 {.height=0.6, .colour={.r=177, .g=3, .b=252}, .texture=NULL}
-#define s7 {.height=0.7, .colour={.r=177, .g=3, .b=252}, .texture=NULL}
-#define s8 {.height=0.8, .colour={.r=177, .g=3, .b=252}, .texture=NULL}
-#define s9 {.height=0.9, .colour={.r=177, .g=3, .b=252}, .texture=NULL}
+#define w {.height=1.1, .colour={.r=128, .g=128, .b=128, .a=255}, .texture=NULL}
+#define W {.height=0.7, .colour={.r=120, .g=120, .b=120, .a=255}, .texture=NULL}
+#define D {.height=1.4, .colour={.r=120, .g=120, .b=120, .a=255}, .texture=NULL}
+#define T {.height=2.1, .colour={.r=120, .g=120, .b=120, .a=255}, .texture=NULL}
+#define H {.height=2.8, .colour={.r=120, .g=120, .b=120, .a=255}, .texture=NULL}
+#define B {.height=1.5, .colour={.r=235, .g=50, .b=52, .a=255}, .texture=NULL}
+#define s1 {.height=0.1, .colour={.r=177, .g=3, .b=252, .a=255}, .texture=NULL}
+#define s2 {.height=0.2, .colour={.r=177, .g=3, .b=252, .a=255}, .texture=NULL}
+#define s3 {.height=0.3, .colour={.r=177, .g=3, .b=252, .a=255}, .texture=NULL}
+#define s4 {.height=0.4, .colour={.r=177, .g=3, .b=252, .a=255}, .texture=NULL}
+#define s5 {.height=0.5, .colour={.r=177, .g=3, .b=252, .a=255}, .texture=NULL}
+#define s6 {.height=0.6, .colour={.r=177, .g=3, .b=252, .a=255}, .texture=NULL}
+#define s7 {.height=0.7, .colour={.r=177, .g=3, .b=252, .a=255}, .texture=NULL}
+#define s8 {.height=0.8, .colour={.r=177, .g=3, .b=252, .a=255}, .texture=NULL}
+#define s9 {.height=0.9, .colour={.r=177, .g=3, .b=252, .a=255}, .texture=NULL}
 const Renderer::BlockInfo map[MapH][MapW]={
 	{ W, W, W, _, _, _, _, _, _, _, _, _, _, _, _, _},
 	{ _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _},
