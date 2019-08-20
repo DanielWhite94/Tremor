@@ -161,7 +161,10 @@ namespace TremorEngine {
 						// Textured block
 						// Note: we always ask the renderer to draw the whole slice - even if say we are very close to a block and so most of the slice is not visible anyway - hoping that it interally optimises the blit.
 
-						uint8_t colourMod=(slices[slicesNext].intersectionSide==Ray::Side::Horizontal ? 153 : 255);
+						uint8_t colourMod=255;
+						if (slices[slicesNext].intersectionSide==Ray::Side::Horizontal)
+							colourMod*=0.6;
+						colourMod*=colourDistanceFactor(slices[slicesNext].distance);
 						SDL_SetTextureColorMod(slices[slicesNext].blockInfo.texture->getSdlTexture(), colourMod, colourMod, colourMod); // make edges/corners between horizontal and vertical walls clearer
 
 						SDL_Rect srcRect={.x=slices[slicesNext].blockTextureX, .y=0, .w=1, .h=slices[slicesNext].blockInfo.texture->getHeight()};
