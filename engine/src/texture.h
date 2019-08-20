@@ -4,6 +4,8 @@
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
 
+#include "colour.h"
+
 namespace TremorEngine {
 
 	class Texture {
@@ -15,6 +17,7 @@ namespace TremorEngine {
 
 		int getWidth(void) const;
 		int getHeight(void) const;
+		Colour getPixel(int x, int y) const;
 
 		SDL_Texture *getSdlTexture(void) const;
 	private:
@@ -23,6 +26,8 @@ namespace TremorEngine {
 		int width, height;
 
 		SDL_Texture *texture;
+
+		Colour *pixels;
 	};
 
 };
