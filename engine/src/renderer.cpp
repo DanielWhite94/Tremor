@@ -314,14 +314,18 @@ namespace TremorEngine {
 					if (objectDistance>zBuffer[sx+sy*windowWidth])
 						continue;
 
+					// Grab pixel from texture and skip if completely transparent.
+					int textureExtractX=tx*textureXFactor;
+					Colour pixel=objectTexture->getPixel(textureExtractX, textureExtractY);
+					if (pixel.a==0)
+						continue;
+
 					// Update z-buffer (no need if not drawing it - we already draw objects back-to-front anyway)
 					if (drawZBuffer)
 						zBuffer[sx+sy*windowWidth]=objectDistance;
 
 					// Draw pixel
 					if (!drawZBuffer) {
-						int textureExtractX=tx*textureXFactor;
-						Colour pixel=objectTexture->getPixel(textureExtractX, textureExtractY);
 						colourAdjustForDistance(pixel, objectDistance);
 						SDL_SetRenderDrawColor(renderer, pixel.r, pixel.g, pixel.b, pixel.a);
 						SDL_RenderDrawPoint(renderer, sx, sy);
