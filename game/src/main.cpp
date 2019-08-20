@@ -95,6 +95,9 @@ void demoInit(void) {
 		exit(EXIT_FAILURE);
 	}
 
+	// Set blend mode to 'blend' so that rendering objects with transparency works.
+	SDL_SetRenderDrawBlendMode(sdlRenderer, SDL_BLENDMODE_BLEND);
+
 	// Turn on relative mouse mode to hide cursor and still generate relative changes when cursor hits the edge of the window.
 	SDL_SetRelativeMouseMode(SDL_TRUE);
 
