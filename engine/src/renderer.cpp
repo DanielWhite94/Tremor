@@ -1,6 +1,7 @@
 #include <cassert>
 #include <cmath>
 #include <limits>
+#include <algorithm>
 
 #include <SDL2/SDL2_gfxPrimitives.h>
 
@@ -8,6 +9,28 @@
 #include "renderer.h"
 
 namespace TremorEngine {
+	struct RendererCompareObjectsByDistance {
+		RendererCompareObjectsByDistance(const Camera &camera): camera(camera) {
+		}
+
+		~RendererCompareObjectsByDistance() {
+		}
+
+		bool operator() (Object *i, Object *j) {
+			double iDx=i->getCamera().getX()-camera.getX();
+			double iDy=i->getCamera().getY()-camera.getY();
+			double iDist2=(iDx*iDx+iDy*iDy);
+
+			double jDx=j->getCamera().getX()-camera.getX();
+			double jDy=j->getCamera().getY()-camera.getY();
+			double jDist2=(jDx*jDx+jDy*jDy);
+
+			return (iDist2>=jDist2);
+		}
+
+		const Camera &camera;
+	};
+
 	Renderer::Renderer(SDL_Renderer *renderer, int windowWidth, int windowHeight, double unitBlockHeight, GetBlockInfoFunctor *getBlockInfoFunctor, void *getBlockInfoUserData, GetObjectsInRangeFunctor *getObjectsInRangeFunctor, void *getObjectsInRangeUserData): renderer(renderer), windowWidth(windowWidth), windowHeight(windowHeight), unitBlockHeight(unitBlockHeight), getBlockInfoFunctor(getBlockInfoFunctor), getBlockInfoUserData(getBlockInfoUserData), getObjectsInRangeFunctor(getObjectsInRangeFunctor), getObjectsInRangeUserData(getObjectsInRangeUserData) {
 		colourBg.r=255; colourBg.g=0; colourBg.b=255; // Pink (to help identify any undrawn regions).
 		colourGround.r=0; colourGround.g=255; colourGround.b=0; // Green.
@@ -209,6 +232,9 @@ namespace TremorEngine {
 		// Draw object sprites
 		std::vector<Object *> *objects=getObjectsInRangeFunctor(camera, getObjectsInRangeUserData);
 
+		RendererCompareObjectsByDistance compareObjectsByDistance(camera);
+		std::sort(objects->begin(), objects->end(), compareObjectsByDistance); // sort so that we paint closer objects over the top of further away ones (the z buffer is not enough if textures are partially transparent)
+
 		for(auto object : *objects) {
 			// Determine angle from camera to object, and skip drawing if object is behind camera.
 			double dx=camera.getX()-object->getCamera().getX();
@@ -265,8 +291,9 @@ namespace TremorEngine {
 					if (distance>zBuffer[sx+sy*windowWidth])
 						continue;
 
-					// Update z-buffer
-					zBuffer[sx+sy*windowWidth]=distance;
+					// Update z-buffer (no need if not drawing it - we already draw objects back-to-front anyway)
+					if (drawZBuffer)
+						zBuffer[sx+sy*windowWidth]=distance;
 
 					// Draw pixel
 					if (!drawZBuffer) {
