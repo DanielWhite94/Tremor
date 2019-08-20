@@ -19,8 +19,11 @@ OBJS = $(patsubst $(SRCDIR)/%.cpp, $(BUILDDIR)/%.o, $(SRCS))
 ALL: $(OBJS)
 	$(CPP) $(CFLAGS) $(LFLAGS) $(OBJS) $(ENGINELIB) -o $(OUTFILE)
 
-$(BUILDDIR)/%.o: $(SRCDIR)/%.cpp
+$(BUILDDIR)/%.o: $(SRCDIR)/%.cpp $(BUILDDIR)
 	$(CPP) $(CFLAGS) -c $< -o $@
+
+$(BUILDDIR):
+	mkdir -p $(BUILDDIR)
 
 clean:
 	rm -f $(OBJS)
