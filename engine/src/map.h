@@ -41,6 +41,7 @@ namespace TremorEngine {
 
 		std::vector<Texture *> *textures;
 		Block *blocks;
+		std::vector<Object *> *objects;
 	};
 }
 

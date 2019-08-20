@@ -25,6 +25,9 @@ namespace TremorEngine {
 		// Allocate textures vector
 		textures=new std::vector<Texture *>;
 
+		// Allocate objects vector
+		objects=new std::vector<Object *>;
+
 		// Allocate blocks array
 		blocks=(Block *)malloc(sizeof(Block)*width*height);
 		if (blocks==NULL)
@@ -43,6 +46,9 @@ namespace TremorEngine {
 
 		// Allocate textures vector
 		textures=new std::vector<Texture *>;
+
+		// Allocate objects vector
+		objects=new std::vector<Object *>;
 
 		// Set fields to indicate empty map initially
 		width=0;
@@ -149,7 +155,56 @@ namespace TremorEngine {
 		}
 
 		// Parse JSON data - load objects
-		// TODO: this
+		json jsonObjects=jsonMap["objects"];
+		if (jsonObjects.is_array()) {
+			for(auto &objectEntry : jsonObjects.items()) {
+				json jsonObject=objectEntry.value();
+
+				if (!jsonObject["width"].is_number() || !jsonObject["height"].is_number() || !jsonObject["camera"].is_object() || !jsonObject["camera"]["x"].is_number() || !jsonObject["camera"]["y"].is_number() || !jsonObject["camera"]["z"].is_number() || !jsonObject["camera"]["yaw"].is_number() || !jsonObject["textures"].is_array()) {
+					std::cout << "Warning while loading map: bad object '" << jsonObject << "'." << std::endl;
+					continue;
+				}
+
+				double objectWidth=jsonObject["width"].get<double>();
+				double objectHeight=jsonObject["height"].get<double>();
+				double objectCameraX=jsonObject["camera"]["x"].get<double>();
+				double objectCameraY=jsonObject["camera"]["y"].get<double>();
+				double objectCameraZ=jsonObject["camera"]["z"].get<double>();
+				double objectCameraYaw=jsonObject["camera"]["yaw"].get<double>();
+
+				if (objectWidth<=0.0 || objectHeight<=0.0) {
+					std::cout << "Warning while loading map: bad object '" << jsonObject << "'." << std::endl;
+					continue;
+				}
+
+				Camera objectCamera(objectCameraX, objectCameraY, objectCameraZ, objectCameraYaw);
+
+				Object::MovementParameters objectMovementParameters;
+				json jsonMovementParameters=jsonObject["movementParameters"];
+				if (jsonMovementParameters.is_object()) {
+					if (jsonMovementParameters["standHeight"].is_number())
+						objectMovementParameters.standHeight=jsonMovementParameters["standHeight"].get<double>();
+				}
+
+				Object *object=new Object(objectWidth, objectHeight, objectCamera, objectMovementParameters);
+
+				for(auto &textureEntry : jsonObject["textures"].items()) {
+					json jsonObjectTexture=textureEntry.value();
+					if (!jsonObjectTexture.is_number())
+						continue;
+
+					int textureId=jsonObjectTexture.get<int>();
+
+					Texture *texture=getTextureById(textureId);
+					if (texture==NULL)
+						continue;
+
+					object->addTexture(texture);
+				}
+
+				objects->push_back(object);
+			}
+		}
 
 		// Done
 		hasInit=true;
@@ -158,6 +213,10 @@ namespace TremorEngine {
 	Map::~Map() {
 		// Free blocks array
 		free(blocks);
+
+		// Free objects vector
+		// TODO: delete all entries also?
+		delete objects;
 
 		// Free textures vector
 		// TODO: delete all entries also?
@@ -187,7 +246,9 @@ namespace TremorEngine {
 	std::vector<Object *> *Map::getObjectsInRangeFunctor(const Camera &camera) {
 		std::vector<Object *> *list=new std::vector<Object *>;
 
-		// TODO: this
+		// TODO: make this more efficient by using a better algorithm and culling based on given camera.
+		// For now we simply copy the whole object list each time.
+		*list=*objects;
 
 		return list;
 	}
@@ -222,5 +283,4 @@ namespace TremorEngine {
 
 		return true;
 	}
-
 };
