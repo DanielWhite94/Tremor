@@ -1,0 +1,90 @@
+{
+    "map":{
+        "name":"Demo Map",
+        "width":16,
+        "height":16,
+        "textures":[
+            {"id":0, "file":"images/wall1.png"},
+            {"id":1, "file":"images/wall2.png"},
+            {"id":2, "file":"images/barrel.png"},
+            {"id":3, "file":"images/lois/0.png"},
+            {"id":4, "file":"images/lois/1.png"},
+            {"id":5, "file":"images/lois/2.png"},
+            {"id":6, "file":"images/lois/3.png"},
+            {"id":7, "file":"images/lois/4.png"},
+            {"id":8, "file":"images/lois/5.png"},
+            {"id":9, "file":"images/lois/6.png"},
+            {"id":10, "file":"images/lois/7.png"}
+        ],
+        "blocks":[
+            {
+                "x":7,
+                "y":8,
+                "height":0.4,
+                "colour":{
+                    "r":255,
+                    "g":0,
+                    "b":0,
+                    "a":255
+                },
+                "texture":1
+            },
+            {
+                "x":8,
+                "y":8,
+                "height":0.8,
+                "colour":{
+                    "r":255,
+                    "g":0,
+                    "b":0,
+                    "a":255
+                },
+                "texture":1
+            },
+            {
+                "x":9,
+                "y":8,
+                "height":1.2,
+                "colour":{
+                    "r":255,
+                    "g":0,
+                    "b":0,
+                    "a":255
+                },
+                "texture":1
+            }
+        ],
+        "objects":[
+            {
+                "id":0,
+                "width":0.3,
+                "height":0.5,
+                "camera":{
+                    "x": 0.768908,
+                    "y": 9.275132,
+                    "z": 0.500000,
+                    "yaw": 0.000000
+                },
+                "movementParameters":{
+                    "standHeight":0.3
+                },
+                "textures":[2]
+            },
+            {
+                "id":1,
+                "width":0.3,
+                "height":0.6,
+                "camera":{
+                    "x": 1.423984,
+                    "y": 10.041379,
+                    "z": 0.500000,
+                    "yaw": 3.126846
+                },
+                "movementParameters":{
+                    "standHeight":0.5
+                },
+                "textures":[3,4,5,6,7,8,9,10]
+            }
+        ]
+    }
+}
