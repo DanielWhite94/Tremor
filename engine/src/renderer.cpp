@@ -232,30 +232,28 @@ namespace TremorEngine {
 		std::sort(objects->begin(), objects->end(), compareObjectsByDistance); // sort so that we paint closer objects over the top of further away ones (the z buffer is not enough if textures are partially transparent)
 
 		for(auto object : *objects) {
-			// Determine angle from camera to object, and skip drawing if object is behind camera.
-			double dx=camera.getX()-object->getCamera().getX();
-			double dy=camera.getY()-object->getCamera().getY();
-			double objectAngleDirect=atan2(dy, dx);
-			double objectAngleRelative=angleNormalise(objectAngleDirect-camera.getYaw());
-			if (objectAngleRelative<0.5*M_PI || objectAngleRelative>1.5*M_PI)
+			// Determine angle (and distance) from camera to object, and skip drawing if object is behind camera.
+			double objectVisibleAngle, objectBearing, objectDistance;
+			camera.getTargetInfo(object->getCamera(), &objectVisibleAngle, &objectBearing, &objectDistance);
+
+			objectBearing=angleNormalise(objectBearing);
+			if (objectBearing<0.5*M_PI || objectBearing>1.5*M_PI)
 				continue;
 
 			// Determine x-coordinate of screen where object should appear, and its width.
 			// Skip drawing if zero-width or off screen (too far left or right).
-			double distance=sqrt(dx*dx+dy*dy);
-			int objectCentreScreenX=tan(objectAngleRelative)*screenDist+windowWidth/2;
-			int objectScreenW=computeBlockDisplayHeight(object->getWidth(), distance);
+			int objectCentreScreenX=tan(objectBearing)*screenDist+windowWidth/2;
+			int objectScreenW=computeBlockDisplayHeight(object->getWidth(), objectDistance);
 			if (objectScreenW<=0 || objectCentreScreenX+objectScreenW/2<0 || objectCentreScreenX-objectScreenW/2>=windowWidth)
 				continue;
 
 			// Compute base and height of object on screen, and skip drawing if zero-height or off screen (too high/low).
-			int objectScreenBase=computeBlockDisplayBase(distance, cameraZScreenAdjustment, cameraPitchScreenAdjustment);
-			int objectScreenH=computeBlockDisplayHeight(object->getHeight(), distance);
+			int objectScreenBase=computeBlockDisplayBase(objectDistance, cameraZScreenAdjustment, cameraPitchScreenAdjustment);
+			int objectScreenH=computeBlockDisplayHeight(object->getHeight(), objectDistance);
 			if (objectScreenH<=0 || objectScreenBase<0 || objectScreenBase-objectScreenH>=windowHeight)
 				continue;
 
 			// Grab texture info and compute factors used to map screen pixels to texture pixels.
-			double objectVisibleAngle=object->getCamera().getYaw()+objectAngleDirect;
 			Texture *objectTexture=object->getTextureAngle(objectVisibleAngle);
 			if (objectTexture==NULL)
 				continue;
@@ -278,12 +276,12 @@ namespace TremorEngine {
 						continue;
 
 					// z-buffer indicates object would not be visible?
-					if (distance>zBuffer[sx+sy*windowWidth])
+					if (objectDistance>zBuffer[sx+sy*windowWidth])
 						continue;
 
 					// Update z-buffer (no need if not drawing it - we already draw objects back-to-front anyway)
 					if (drawZBuffer)
-						zBuffer[sx+sy*windowWidth]=distance;
+						zBuffer[sx+sy*windowWidth]=objectDistance;
 
 					// Draw pixel
 					if (!drawZBuffer) {
