@@ -226,6 +226,7 @@ namespace TremorEngine {
 					if (!drawZBuffer) {
 						Colour blockTopDisplayColour=slices[slicesNext].blockInfo.colour;
 						blockTopDisplayColour.mul(1.05);
+						colourAdjustForDistance(blockTopDisplayColour, slices[slicesNext].distance); // Note: distance is not quite correct - see note below when updating z-buffer
 						SDL_SetRenderDrawColor(renderer, blockTopDisplayColour.r, blockTopDisplayColour.g, blockTopDisplayColour.b, blockTopDisplayColour.a);
 						SDL_RenderDrawLine(renderer, x, blockDisplayTop-slices[slicesNext].blockDisplayTopSize, x, blockDisplayTop);
 					}
