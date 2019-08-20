@@ -27,6 +27,8 @@ namespace TremorEngine {
 
 		// Allocate blocks array
 		blocks=(Block *)malloc(sizeof(Block)*width*height);
+		if (blocks==NULL)
+			return;
 
 		// Fill blocks array with height=0 to imply empty
 		for(unsigned i=0; i<width*height; ++i)
