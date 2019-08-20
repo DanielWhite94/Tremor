@@ -22,6 +22,16 @@ namespace TremorEngine {
 	Map::Map(SDL_Renderer *renderer, int width, int height): renderer(renderer), width(width), height(height) {
 		hasInit=false;
 
+		// Set default ground and sky colours.
+		colourGround.r=0;
+		colourGround.g=255;
+		colourGround.b=0;
+		colourGround.a=255;
+		colourSky.r=0;
+		colourSky.g=0;
+		colourSky.b=255;
+		colourSky.a=255;
+
 		// Allocate textures vector
 		textures=new std::vector<Texture *>;
 
@@ -54,6 +64,14 @@ namespace TremorEngine {
 		width=0;
 		height=0;
 		blocks=NULL;
+		colourGround.r=0;
+		colourGround.g=255;
+		colourGround.b=0;
+		colourGround.a=255;
+		colourSky.r=0;
+		colourSky.g=0;
+		colourSky.b=255;
+		colourSky.a=255;
 
 		// Load map as JSON object
 		// TODO: check for failure
@@ -90,6 +108,26 @@ namespace TremorEngine {
 		// Fill blocks array with height=0 to imply empty
 		for(unsigned i=0; i<width*height; ++i)
 			blocks[i].height=0.0;
+
+		// Parse JSON data - load ground and sky colours if given
+		if (jsonMap["groundColour"].is_object()) {
+			// TODO: warning if r, g, b or a are not numbers or bad values.
+			if (jsonMap["groundColour"]["r"].is_number() && jsonMap["groundColour"]["g"].is_number() && jsonMap["groundColour"]["b"].is_number() && jsonMap["groundColour"]["a"].is_number()) {
+				colourGround.r=jsonMap["groundColour"]["r"].get<int>();
+				colourGround.g=jsonMap["groundColour"]["g"].get<int>();
+				colourGround.b=jsonMap["groundColour"]["b"].get<int>();
+				colourGround.a=jsonMap["groundColour"]["a"].get<int>();
+			}
+		}
+		if (jsonMap["skyColour"].is_object()) {
+			// TODO: warning if r, g, b or a are not numbers or bad values.
+			if (jsonMap["skyColour"]["r"].is_number() && jsonMap["skyColour"]["g"].is_number() && jsonMap["skyColour"]["b"].is_number() && jsonMap["skyColour"]["a"].is_number()) {
+				colourSky.r=jsonMap["skyColour"]["r"].get<int>();
+				colourSky.g=jsonMap["skyColour"]["g"].get<int>();
+				colourSky.b=jsonMap["skyColour"]["b"].get<int>();
+				colourSky.a=jsonMap["skyColour"]["a"].get<int>();
+			}
+		}
 
 		// Parse JSON data - load textures
 		json jsonTextures=jsonMap["textures"];
@@ -269,6 +307,14 @@ namespace TremorEngine {
 
 	int Map::getHeight(void) const {
 		return height;
+	}
+
+	const Colour &Map::getGroundColour(void) const {
+		return colourGround;
+	}
+
+	const Colour &Map::getSkyColour(void) const {
+		return colourSky;
 	}
 
 	bool Map::addTexture(int id, const char *path) {

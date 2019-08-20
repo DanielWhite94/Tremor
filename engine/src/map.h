@@ -3,6 +3,7 @@
 
 #include <vector>
 
+#include "colour.h"
 #include "camera.h"
 #include "object.h"
 #include "renderer.h"
@@ -26,6 +27,8 @@ namespace TremorEngine {
 		Texture *getTextureById(int id);
 		int getWidth(void) const;
 		int getHeight(void) const;
+		const Colour &getGroundColour(void) const;
+		const Colour &getSkyColour(void) const;
 
 		bool addTexture(int id, const char *path);
 	private:
@@ -40,6 +43,8 @@ namespace TremorEngine {
 		SDL_Renderer *renderer;
 
 		int width, height;
+
+		Colour colourGround, colourSky;
 
 		std::vector<Texture *> *textures;
 		Block *blocks;

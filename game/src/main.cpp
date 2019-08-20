@@ -120,6 +120,8 @@ void demoInit(const char *mapFile) {
 	renderer=new Renderer(sdlRenderer, windowWidth, windowHeight, unitBlockHeight, &mapGetBlockInfoFunctor, map, &mapGetObjectsInRangeFunctor, map);
 	renderer->setBrightnessMin(0.5);
 	renderer->setBrightnessMax(1.0);
+	renderer->setGroundColour(map->getGroundColour());
+	renderer->setSkyColour(map->getSkyColour());
 
 	// Create player object
 	Camera playerCamera(map->getWidth()/2.0, map->getHeight()/2.0, playerMovementParametersStart.standHeight, 0.0);
