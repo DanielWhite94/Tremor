@@ -42,7 +42,7 @@ namespace TremorEngine {
 		if (n<0 || n>=getTextureCount())
 			return NULL;
 
-		return (*textures)[n];
+		return textures->at(n);
 	}
 
 	Texture *Object::getTextureAngle(double angle) const {
