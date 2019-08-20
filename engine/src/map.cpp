@@ -109,7 +109,44 @@ namespace TremorEngine {
 		}
 
 		// Parse JSON data - load blocks
-		// TODO: this
+		json jsonBlocks=jsonMap["blocks"];
+		if (jsonBlocks.is_array()) {
+			for(auto &entry : jsonBlocks.items()) {
+				json jsonBlock=entry.value();
+
+				if (!jsonBlock["x"].is_number() || !jsonBlock["y"].is_number() || !jsonBlock["height"].is_number() || !jsonBlock["colour"].is_object() || !jsonBlock["colour"]["r"].is_number() || !jsonBlock["colour"]["g"].is_number() || !jsonBlock["colour"]["b"].is_number() || !jsonBlock["colour"]["a"].is_number()) {
+					std::cout << "Warning while loading map: bad block '" << jsonBlock << "'." << std::endl;
+					continue;
+				}
+
+				int blockX=jsonBlock["x"].get<int>();
+				int blockY=jsonBlock["y"].get<int>();
+				double blockHeight=jsonBlock["height"].get<double>();
+				int blockColourR=jsonBlock["colour"]["r"].get<int>();
+				int blockColourG=jsonBlock["colour"]["g"].get<int>();
+				int blockColourB=jsonBlock["colour"]["b"].get<int>();
+				int blockColourA=jsonBlock["colour"]["a"].get<int>();
+				if (blockX<0 || blockX>=width || blockY<0 || blockY>=height || blockHeight<=0.0 ||
+				    blockColourR<0 || blockColourR>255 ||
+				    blockColourG<0 || blockColourG>255 ||
+				    blockColourB<0 || blockColourB>255 ||
+				    blockColourA<0 || blockColourA>255) {
+					std::cout << "Warning while loading map: bad block '" << jsonBlock << "'." << std::endl;
+					continue;
+				}
+
+				// Update blocks array
+				Block *block=&blocks[blockX+blockY*width];
+				block->height=blockHeight;
+				block->colour.r=blockColourR;
+				block->colour.g=blockColourG;
+				block->colour.b=blockColourB;
+				block->colour.a=blockColourA;
+				block->textureId=-1;
+				if (jsonBlock["texture"].is_number())
+					block->textureId=jsonBlock["texture"].get<int>(); // TODO: check id points to valid texture
+			}
+		}
 
 		// Parse JSON data - load objects
 		// TODO: this
