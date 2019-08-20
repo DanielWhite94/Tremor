@@ -22,6 +22,9 @@ namespace TremorEngine {
 	Map::Map(SDL_Renderer *renderer, int width, int height): renderer(renderer), width(width), height(height) {
 		hasInit=false;
 
+		// Allocate textures vector
+		textures=new std::vector<Texture *>;
+
 		// Allocate blocks array
 		blocks=(Block *)malloc(sizeof(Block)*width*height);
 
@@ -35,6 +38,9 @@ namespace TremorEngine {
 
 	Map::Map(SDL_Renderer *renderer, const char *file): renderer(renderer) {
 		hasInit=false;
+
+		// Allocate textures vector
+		textures=new std::vector<Texture *>;
 		// TODO: this
 		width=0;
 		height=0;
@@ -44,6 +50,9 @@ namespace TremorEngine {
 	Map::~Map() {
 		// Free blocks array
 		free(blocks);
+
+		// Free textures vector
+		delete textures;
 	}
 
 	bool Map::getBlockInfoFunctor(int mapX, int mapY, Renderer::BlockInfo *info) {
@@ -66,6 +75,33 @@ namespace TremorEngine {
 
 	bool Map::getHasInit(void) {
 		return hasInit;
+	}
+
+	Texture *Map::getTextureById(int id) {
+		if (id<0 || id>textures->size())
+			return NULL;
+		return textures->at(id);
+	}
+
+	bool Map::addTexture(int id, const char *path) {
+		// Does a texture already exist with this id?
+		if (getTextureById(id)!=NULL)
+			return false;
+
+		// Create and load texture
+		Texture *texture=new Texture(renderer, path);
+		if (!texture->getHasInit()) {
+			delete texture;
+			return false;
+		}
+
+		// Add to vector
+		// TODO: Do textures->reserve instead
+		while (id>=textures->size())
+			textures->push_back(NULL);
+		(*textures)[id]=texture;
+
+		return true;
 	}
 
 };

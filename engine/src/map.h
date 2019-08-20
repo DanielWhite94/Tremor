@@ -23,6 +23,9 @@ namespace TremorEngine {
 		std::vector<Object *> *getObjectsInRangeFunctor(const Camera &camera);
 
 		bool getHasInit(void);
+		Texture *getTextureById(int id);
+
+		bool addTexture(int id, const char *path);
 	private:
 		struct Block {
 			double height; // if set to 0.0 then no block here
@@ -36,6 +39,7 @@ namespace TremorEngine {
 
 		int width, height;
 
+		std::vector<Texture *> *textures;
 		Block *blocks;
 	};
 }
