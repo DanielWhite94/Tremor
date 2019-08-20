@@ -118,8 +118,8 @@ void demoInit(const char *mapFile) {
 	// Create ray casting renderer
 	double unitBlockHeight=(512.0*windowWidth)/640.0;
 	renderer=new Renderer(sdlRenderer, windowWidth, windowHeight, unitBlockHeight, &mapGetBlockInfoFunctor, map, &mapGetObjectsInRangeFunctor, map);
-	renderer->setBrightnessMin(0.5);
-	renderer->setBrightnessMax(1.0);
+	renderer->setBrightnessMin(map->getBrightnessMin());
+	renderer->setBrightnessMax(map->getBrightnessMax());
 	renderer->setGroundColour(map->getGroundColour());
 	renderer->setSkyColour(map->getSkyColour());
 

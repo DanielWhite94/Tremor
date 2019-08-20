@@ -3,6 +3,8 @@
         "name":"Indoor Map",
         "width":11,
         "height":16,
+        "brightnessMin":0.0,
+        "brightnessMax":0.5,
         "groundColour":{
             "r":128,
             "g":128,

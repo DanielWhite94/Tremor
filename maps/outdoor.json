@@ -3,6 +3,8 @@
         "name":"Outdoor Map",
         "width":16,
         "height":16,
+        "brightnessMin":0.5,
+        "brightnessMax":1.0,
         "groundColour":{
             "r":0,
             "g":255,

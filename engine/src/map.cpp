@@ -22,7 +22,8 @@ namespace TremorEngine {
 	Map::Map(SDL_Renderer *renderer, int width, int height): renderer(renderer), width(width), height(height) {
 		hasInit=false;
 
-		// Set default ground and sky colours.
+		// Set default field values
+		blocks=NULL;
 		colourGround.r=0;
 		colourGround.g=255;
 		colourGround.b=0;
@@ -31,6 +32,8 @@ namespace TremorEngine {
 		colourSky.g=0;
 		colourSky.b=255;
 		colourSky.a=255;
+		brightnessMin=0.0;
+		brightnessMax=0.0;
 
 		// Allocate textures vector
 		textures=new std::vector<Texture *>;
@@ -72,6 +75,8 @@ namespace TremorEngine {
 		colourSky.g=0;
 		colourSky.b=255;
 		colourSky.a=255;
+		brightnessMin=0.0;
+		brightnessMax=0.0;
 
 		// Load map as JSON object
 		// TODO: check for failure
@@ -127,6 +132,16 @@ namespace TremorEngine {
 				colourSky.b=jsonMap["skyColour"]["b"].get<int>();
 				colourSky.a=jsonMap["skyColour"]["a"].get<int>();
 			}
+		}
+
+		// Parse JSON data - load brightness values given
+		if (jsonMap["brightnessMin"].is_number()) {
+			// TODO: check value is in interval [0.0,1.0]
+			brightnessMin=jsonMap["brightnessMin"].get<double>();
+		}
+		if (jsonMap["brightnessMax"].is_number()) {
+			// TODO: check value is in interval [0.0,1.0]
+			brightnessMax=jsonMap["brightnessMax"].get<double>();
 		}
 
 		// Parse JSON data - load textures
@@ -315,6 +330,14 @@ namespace TremorEngine {
 
 	const Colour &Map::getSkyColour(void) const {
 		return colourSky;
+	}
+
+	double Map::getBrightnessMin(void) const {
+		return brightnessMin;
+	}
+
+	double Map::getBrightnessMax(void) const {
+		return brightnessMax;
 	}
 
 	bool Map::addTexture(int id, const char *path) {

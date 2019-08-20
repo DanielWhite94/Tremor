@@ -29,6 +29,8 @@ namespace TremorEngine {
 		int getHeight(void) const;
 		const Colour &getGroundColour(void) const;
 		const Colour &getSkyColour(void) const;
+		double getBrightnessMin(void) const;
+		double getBrightnessMax(void) const;
 
 		bool addTexture(int id, const char *path);
 	private:
@@ -43,8 +45,8 @@ namespace TremorEngine {
 		SDL_Renderer *renderer;
 
 		int width, height;
-
 		Colour colourGround, colourSky;
+		double brightnessMin, brightnessMax;
 
 		std::vector<Texture *> *textures;
 		Block *blocks;
