@@ -107,27 +107,12 @@ namespace TremorEngine {
 			blocks[i].height=0.0;
 
 		// Parse JSON data - load textures
-		json jsonTextures=jsonMap["textures"];
-		if (jsonTextures.is_array()) {
-			for(auto &entry : jsonTextures.items()) {
+		if (jsonMap.count("textures")==1 && jsonMap["textures"].is_array())
+			for(auto &entry : jsonMap["textures"].items()) {
 				json jsonTexture=entry.value();
-				if (!jsonTexture["id"].is_number() || !jsonTexture["file"].is_string()) {
+				if (!jsonParseTexture(jsonTexture))
 					std::cout << "Warning while loading map: bad texture '" << jsonTexture << "'." << std::endl;
-					continue;
-				}
-
-				int textureId=jsonTexture["id"].get<int>();
-				if (textureId<0) {
-					std::cout << "Warning while loading map: bad texture id " << jsonTexture["id"] << "." << std::endl;
-					continue;
-				}
-				std::string textureFile=jsonTexture["file"].get<std::string>();
-				if (!addTexture(textureId, textureFile.c_str())) {
-					std::cout << "Warning while loading map: could not load texture " << textureId << " at '" << textureFile << "'." << std::endl;
-					continue;
-				}
 			}
-		}
 
 		// Parse JSON data - load blocks
 		json jsonBlocks=jsonMap["blocks"];
@@ -362,6 +347,26 @@ namespace TremorEngine {
 		}
 
 		return true;
+	}
+
+	bool Map::jsonParseTexture(const json &textureObject) {
+		if (!textureObject.is_object())
+			return false;
+
+		// Grab id
+		if (textureObject.count("id")!=1 || !textureObject["id"].is_number())
+			return false;
+		int textureId=textureObject["id"].get<int>();
+		if (textureId<0)
+			return false;
+
+		// Grab file
+		if (textureObject.count("file")!=1 || !textureObject["file"].is_string())
+			return false;
+		std::string textureFile=textureObject["file"].get<std::string>();
+
+		// Add texture
+		return addTexture(textureId, textureFile.c_str());
 	}
 
 	bool Map::jsonParseColour(const json &object, Colour &colour) {

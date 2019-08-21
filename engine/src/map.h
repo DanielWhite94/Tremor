@@ -59,6 +59,7 @@ namespace TremorEngine {
 		std::vector<Object *> *objects;
 
 		bool jsonParseMetadata(const json &mapObject);
+		bool jsonParseTexture(const json &textureObject);
 		bool jsonParseColour(const json &object, Colour &colour);
 	};
 }
