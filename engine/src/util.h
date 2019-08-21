@@ -9,6 +9,8 @@ namespace TremorEngine {
 	void microSecondsDelay(MicroSeconds micros);
 
 	double angleNormalise(double angle); // adjusts into interval [0, 2pi)
+
+	int clamp(int x, int a, int b);
 };
 
 #endif
