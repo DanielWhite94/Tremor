@@ -59,7 +59,7 @@ namespace TremorEngine {
 		std::vector<Object *> *objects;
 
 		bool jsonParseMetadata(const json &mapObject);
-		bool jsonParseColour(const json &object, Colour &colour); // ..... make static, also leave comment saying colour nuchanged if fails
+		bool jsonParseColour(const json &object, Colour &colour);
 	};
 }
 
