@@ -4,11 +4,14 @@
 #include <string>
 #include <vector>
 
-#include "colour.h"
 #include "camera.h"
+#include "colour.h"
+#include "json.hpp"
 #include "object.h"
 #include "renderer.h"
 #include "texture.h"
+
+using json=nlohmann::json;
 
 namespace TremorEngine {
 	// Wrapper functions suitable for passing to Renderer constructor (with class pointer as userData)
@@ -54,6 +57,8 @@ namespace TremorEngine {
 		std::vector<Texture *> *textures;
 		Block *blocks;
 		std::vector<Object *> *objects;
+
+		bool jsonParseColour(const json &object, Colour &colour); // ..... make static, also leave comment saying colour nuchanged if fails
 	};
 }
 

@@ -3,10 +3,8 @@
 #include <fstream>
 #include <iostream>
 
-#include "json.hpp"
 #include "map.h"
-
-using json=nlohmann::json;
+#include "util.h"
 
 namespace TremorEngine {
 	bool mapGetBlockInfoFunctor(int mapX, int mapY, Renderer::BlockInfo *info, void *userData) {
@@ -117,24 +115,8 @@ namespace TremorEngine {
 			blocks[i].height=0.0;
 
 		// Parse JSON data - load ground and sky colours if given
-		if (jsonMap["groundColour"].is_object()) {
-			// TODO: warning if r, g, b or a are not numbers or bad values.
-			if (jsonMap["groundColour"]["r"].is_number() && jsonMap["groundColour"]["g"].is_number() && jsonMap["groundColour"]["b"].is_number() && jsonMap["groundColour"]["a"].is_number()) {
-				colourGround.r=jsonMap["groundColour"]["r"].get<int>();
-				colourGround.g=jsonMap["groundColour"]["g"].get<int>();
-				colourGround.b=jsonMap["groundColour"]["b"].get<int>();
-				colourGround.a=jsonMap["groundColour"]["a"].get<int>();
-			}
-		}
-		if (jsonMap["skyColour"].is_object()) {
-			// TODO: warning if r, g, b or a are not numbers or bad values.
-			if (jsonMap["skyColour"]["r"].is_number() && jsonMap["skyColour"]["g"].is_number() && jsonMap["skyColour"]["b"].is_number() && jsonMap["skyColour"]["a"].is_number()) {
-				colourSky.r=jsonMap["skyColour"]["r"].get<int>();
-				colourSky.g=jsonMap["skyColour"]["g"].get<int>();
-				colourSky.b=jsonMap["skyColour"]["b"].get<int>();
-				colourSky.a=jsonMap["skyColour"]["a"].get<int>();
-			}
-		}
+		jsonParseColour(jsonMap["groundColour"], colourGround);
+		jsonParseColour(jsonMap["skyColour"], colourSky);
 
 		// Parse JSON data - load brightness values if given
 		if (jsonMap["brightnessMin"].is_number()) {
@@ -181,7 +163,7 @@ namespace TremorEngine {
 			for(auto &entry : jsonBlocks.items()) {
 				json jsonBlock=entry.value();
 
-				if (!jsonBlock["x"].is_number() || !jsonBlock["y"].is_number() || !jsonBlock["height"].is_number() || !jsonBlock["colour"].is_object() || !jsonBlock["colour"]["r"].is_number() || !jsonBlock["colour"]["g"].is_number() || !jsonBlock["colour"]["b"].is_number() || !jsonBlock["colour"]["a"].is_number()) {
+				if (!jsonBlock["x"].is_number() || !jsonBlock["y"].is_number() || !jsonBlock["height"].is_number()) {
 					std::cout << "Warning while loading map: bad block '" << jsonBlock << "'." << std::endl;
 					continue;
 				}
@@ -189,15 +171,12 @@ namespace TremorEngine {
 				int blockX=jsonBlock["x"].get<int>();
 				int blockY=jsonBlock["y"].get<int>();
 				double blockHeight=jsonBlock["height"].get<double>();
-				int blockColourR=jsonBlock["colour"]["r"].get<int>();
-				int blockColourG=jsonBlock["colour"]["g"].get<int>();
-				int blockColourB=jsonBlock["colour"]["b"].get<int>();
-				int blockColourA=jsonBlock["colour"]["a"].get<int>();
-				if (blockX<0 || blockX>=width || blockY<0 || blockY>=height || blockHeight<=0.0 ||
-				    blockColourR<0 || blockColourR>255 ||
-				    blockColourG<0 || blockColourG>255 ||
-				    blockColourB<0 || blockColourB>255 ||
-				    blockColourA<0 || blockColourA>255) {
+				Colour blockColour;
+				if (!jsonParseColour(jsonBlock["colour"], blockColour)) {
+					std::cout << "Warning while loading map: bad block colour '" << jsonBlock["colour"] << "'." << std::endl;
+					continue;
+				}
+				if (blockX<0 || blockX>=width || blockY<0 || blockY>=height || blockHeight<=0.0) {
 					std::cout << "Warning while loading map: bad block '" << jsonBlock << "'." << std::endl;
 					continue;
 				}
@@ -205,10 +184,7 @@ namespace TremorEngine {
 				// Update blocks array
 				Block *block=&blocks[blockX+blockY*width];
 				block->height=blockHeight;
-				block->colour.r=blockColourR;
-				block->colour.g=blockColourG;
-				block->colour.b=blockColourB;
-				block->colour.a=blockColourA;
+				block->colour=blockColour;
 				block->textureId=-1;
 				if (jsonBlock["texture"].is_number())
 					block->textureId=jsonBlock["texture"].get<int>(); // TODO: check id points to valid texture
@@ -369,6 +345,26 @@ namespace TremorEngine {
 		while (id>=textures->size())
 			textures->push_back(NULL);
 		(*textures)[id]=texture;
+
+		return true;
+	}
+
+	bool Map::jsonParseColour(const json &object, Colour &colour) {
+		// Misssing fields?
+		if (!object.is_object() || !object["r"].is_number() || !object["g"].is_number() || !object["b"].is_number())
+			return false;
+
+		// Get values
+		int r=object["r"].get<int>();
+		int g=object["g"].get<int>();
+		int b=object["b"].get<int>();
+		int a=(object.count("a")==1 && object["a"].is_number() ? object["a"].get<int>() : 255);
+
+		// Clamp values and copy into given colour
+		colour.r=clamp(r, 0, 255);
+		colour.g=clamp(g, 0, 255);
+		colour.b=clamp(b, 0, 255);
+		colour.a=clamp(a, 0, 255);
 
 		return true;
 	}
