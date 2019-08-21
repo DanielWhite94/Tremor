@@ -115,36 +115,11 @@ namespace TremorEngine {
 			}
 
 		// Parse JSON data - load blocks
-		json jsonBlocks=jsonMap["blocks"];
-		if (jsonBlocks.is_array()) {
-			for(auto &entry : jsonBlocks.items()) {
+		if (jsonMap.count("blocks")==1 && jsonMap["blocks"].is_array()) {
+			for(auto &entry : jsonMap["blocks"].items()) {
 				json jsonBlock=entry.value();
-
-				if (!jsonBlock["x"].is_number() || !jsonBlock["y"].is_number() || !jsonBlock["height"].is_number()) {
+				if (!jsonParseBlock(jsonBlock))
 					std::cout << "Warning while loading map: bad block '" << jsonBlock << "'." << std::endl;
-					continue;
-				}
-
-				int blockX=jsonBlock["x"].get<int>();
-				int blockY=jsonBlock["y"].get<int>();
-				double blockHeight=jsonBlock["height"].get<double>();
-				Colour blockColour;
-				if (!jsonParseColour(jsonBlock["colour"], blockColour)) {
-					std::cout << "Warning while loading map: bad block colour '" << jsonBlock["colour"] << "'." << std::endl;
-					continue;
-				}
-				if (blockX<0 || blockX>=width || blockY<0 || blockY>=height || blockHeight<=0.0) {
-					std::cout << "Warning while loading map: bad block '" << jsonBlock << "'." << std::endl;
-					continue;
-				}
-
-				// Update blocks array
-				Block *block=&blocks[blockX+blockY*width];
-				block->height=blockHeight;
-				block->colour=blockColour;
-				block->textureId=-1;
-				if (jsonBlock["texture"].is_number())
-					block->textureId=jsonBlock["texture"].get<int>(); // TODO: check id points to valid texture
 			}
 		}
 
@@ -367,6 +342,43 @@ namespace TremorEngine {
 
 		// Add texture
 		return addTexture(textureId, textureFile.c_str());
+	}
+
+	bool Map::jsonParseBlock(const json &blockObject) {
+		// Check object is well formed
+		if (!blockObject.is_object())
+			return false;
+
+		if (blockObject.count("x")!=1 || !blockObject["x"].is_number() ||
+		    blockObject.count("y")!=1 || !blockObject["y"].is_number() ||
+		    blockObject.count("height")!=1 || !blockObject["height"].is_number())
+			return false;
+
+		// Grab block properties
+		int blockX=blockObject["x"].get<int>();
+		int blockY=blockObject["y"].get<int>();
+		double blockHeight=blockObject["height"].get<double>();
+		if (blockX<0 || blockX>=width || blockY<0 || blockY>=height || blockHeight<=0.0)
+			return false;
+
+		Colour blockColour;
+		if (blockObject.count("colour")!=1 || !jsonParseColour(blockObject["colour"], blockColour))
+			return false;
+
+		int textureId=-1;
+		if (blockObject.count("texture")==1 && blockObject["texture"].is_number()) {
+			textureId=blockObject["texture"].get<int>(); // TODO: check id points to valid texture
+			if (textureId<0)
+				textureId=-1;
+		}
+
+		// Update blocks array
+		Block *block=&blocks[blockX+blockY*width];
+		block->height=blockHeight;
+		block->colour=blockColour;
+		block->textureId=textureId;
+
+		return true;
 	}
 
 	bool Map::jsonParseColour(const json &object, Colour &colour) {
