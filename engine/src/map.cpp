@@ -23,6 +23,7 @@ namespace TremorEngine {
 		hasInit=false;
 
 		// Set default field values
+		name=std::string("Unnamed Map");
 		blocks=NULL;
 		colourGround.r=0;
 		colourGround.g=255;
@@ -64,6 +65,7 @@ namespace TremorEngine {
 		objects=new std::vector<Object *>;
 
 		// Set fields to indicate empty map initially
+		name=std::string("Unnamed Map");
 		width=0;
 		height=0;
 		blocks=NULL;
@@ -84,7 +86,7 @@ namespace TremorEngine {
 		json jsonRoot;
 		mapStream >> jsonRoot;
 
-		// Parse JSON data - root 'map' object
+		// Parse JSON data - width and height
 		json jsonMap=jsonRoot["map"];
 		if (!jsonMap.is_object()) {
 			std::cout << "Could not load map: no root map object." << std::endl;
@@ -134,7 +136,7 @@ namespace TremorEngine {
 			}
 		}
 
-		// Parse JSON data - load brightness values given
+		// Parse JSON data - load brightness values if given
 		if (jsonMap["brightnessMin"].is_number()) {
 			// TODO: check value is in interval [0.0,1.0]
 			brightnessMin=jsonMap["brightnessMin"].get<double>();
@@ -142,6 +144,12 @@ namespace TremorEngine {
 		if (jsonMap["brightnessMax"].is_number()) {
 			// TODO: check value is in interval [0.0,1.0]
 			brightnessMax=jsonMap["brightnessMax"].get<double>();
+		}
+
+		// Parse JSON data - load name
+		if (jsonMap["name"].is_string()) {
+			// TODO: Consider sanitising this somewhere along the line
+			name=jsonMap["name"].get<std::string>();
 		}
 
 		// Parse JSON data - load textures
@@ -314,6 +322,10 @@ namespace TremorEngine {
 		if (id<0 || id>=textures->size())
 			return NULL;
 		return textures->at(id);
+	}
+
+	const std::string Map::getName(void) const {
+		return name;
 	}
 
 	int Map::getWidth(void) const {

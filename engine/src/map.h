@@ -1,6 +1,7 @@
 #ifndef TREMORENGINE_MAP_H
 #define TREMORENGINE_MAP_H
 
+#include <string>
 #include <vector>
 
 #include "colour.h"
@@ -25,6 +26,7 @@ namespace TremorEngine {
 
 		bool getHasInit(void);
 		Texture *getTextureById(int id);
+		const std::string getName(void) const;
 		int getWidth(void) const;
 		int getHeight(void) const;
 		const Colour &getGroundColour(void) const;
@@ -44,6 +46,7 @@ namespace TremorEngine {
 
 		SDL_Renderer *renderer;
 
+		std::string name;
 		int width, height;
 		Colour colourGround, colourSky;
 		double brightnessMin, brightnessMax;
