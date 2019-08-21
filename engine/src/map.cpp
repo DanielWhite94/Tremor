@@ -84,55 +84,27 @@ namespace TremorEngine {
 		json jsonRoot;
 		mapStream >> jsonRoot;
 
-		// Parse JSON data - width and height
-		json jsonMap=jsonRoot["map"];
-		if (!jsonMap.is_object()) {
+		if (jsonRoot.count("map")!=1) {
 			std::cout << "Could not load map: no root map object." << std::endl;
 			return;
 		}
+		json jsonMap=jsonRoot["map"];
 
-		if (!jsonMap["width"].is_number() || !jsonMap["height"].is_number()) {
-			std::cout << "Could not load map: missing/bad 'width' or 'height' values in root map object." << std::endl;
-			return;
-		}
-		width=jsonMap["width"].get<int>();
-		height=jsonMap["height"].get<int>();
-
-		if (width<1 || height<1) {
-			std::cout << "Could not load map: bad 'width' or 'height' values (width=" << width << ", height=" << height << ")." << std::endl;
+		// Parse JSON data - metadata (width/height, name etc)
+		if (!jsonParseMetadata(jsonMap)) {
+			std::cout << "Could not load map: could not read metadata." << std::endl;
 			return;
 		}
 
-		// Allocate blocks array
+		// Allocate blocks array and fill with height=0 to imply empty
 		blocks=(Block *)malloc(sizeof(Block)*width*height);
 		if (blocks==NULL) {
 			std::cout << "Could not load map: could not allocate blocks array." << std::endl;
 			return;
 		}
 
-		// Fill blocks array with height=0 to imply empty
 		for(unsigned i=0; i<width*height; ++i)
 			blocks[i].height=0.0;
-
-		// Parse JSON data - load ground and sky colours if given
-		jsonParseColour(jsonMap["groundColour"], colourGround);
-		jsonParseColour(jsonMap["skyColour"], colourSky);
-
-		// Parse JSON data - load brightness values if given
-		if (jsonMap["brightnessMin"].is_number()) {
-			// TODO: check value is in interval [0.0,1.0]
-			brightnessMin=jsonMap["brightnessMin"].get<double>();
-		}
-		if (jsonMap["brightnessMax"].is_number()) {
-			// TODO: check value is in interval [0.0,1.0]
-			brightnessMax=jsonMap["brightnessMax"].get<double>();
-		}
-
-		// Parse JSON data - load name
-		if (jsonMap["name"].is_string()) {
-			// TODO: Consider sanitising this somewhere along the line
-			name=jsonMap["name"].get<std::string>();
-		}
 
 		// Parse JSON data - load textures
 		json jsonTextures=jsonMap["textures"];
@@ -345,6 +317,49 @@ namespace TremorEngine {
 		while (id>=textures->size())
 			textures->push_back(NULL);
 		(*textures)[id]=texture;
+
+		return true;
+	}
+
+	bool Map::jsonParseMetadata(const json &mapObject) {
+		// Check map object type.
+		if (!mapObject.is_object())
+			return false;
+
+		// Parse width and height
+		if (mapObject.count("width")!=1 || !mapObject["width"].is_number() || mapObject.count("height")!=1 || !mapObject["height"].is_number()) {
+			std::cout << "Could not load metadata: missing/bad 'width' or 'height' values." << std::endl;
+			return false;
+		}
+		width=mapObject["width"].get<int>();
+		height=mapObject["height"].get<int>();
+
+		if (width<1 || height<1) {
+			std::cout << "Could not load metadata: bad 'width' or 'height' values (width=" << width << ", height=" << height << ")." << std::endl;
+			return false;
+		}
+
+		// Parse ground and sky colours if given
+		if (mapObject.count("groundColour")==1)
+			jsonParseColour(mapObject["groundColour"], colourGround);
+		if (mapObject.count("skyColour")==1)
+			jsonParseColour(mapObject["skyColour"], colourSky);
+
+		// Parse brightness values if given
+		if (mapObject.count("brightnessMin")==1 && mapObject["brightnessMin"].is_number()) {
+			// TODO: check value is in interval [0.0,1.0]
+			brightnessMin=mapObject["brightnessMin"].get<double>();
+		}
+		if (mapObject.count("brightnessMax")==1 && mapObject["brightnessMax"].is_number()) {
+			// TODO: check value is in interval [0.0,1.0]
+			brightnessMax=mapObject["brightnessMax"].get<double>();
+		}
+
+		// Parse name if given
+		if (mapObject.count("name")==1 && mapObject["name"].is_string()) {
+			// TODO: Consider sanitising this somewhere along the line
+			name=mapObject["name"].get<std::string>();
+		}
 
 		return true;
 	}
