@@ -124,54 +124,11 @@ namespace TremorEngine {
 		}
 
 		// Parse JSON data - load objects
-		json jsonObjects=jsonMap["objects"];
-		if (jsonObjects.is_array()) {
-			for(auto &objectEntry : jsonObjects.items()) {
-				json jsonObject=objectEntry.value();
-
-				if (!jsonObject["width"].is_number() || !jsonObject["height"].is_number() || !jsonObject["camera"].is_object() || !jsonObject["camera"]["x"].is_number() || !jsonObject["camera"]["y"].is_number() || !jsonObject["camera"]["z"].is_number() || !jsonObject["camera"]["yaw"].is_number() || !jsonObject["textures"].is_array()) {
+		if (jsonMap.count("objects")==1 && jsonMap["objects"].is_array()) {
+			for(auto &entry : jsonMap["objects"].items()) {
+				json jsonObject=entry.value();
+				if (!jsonParseObject(jsonObject))
 					std::cout << "Warning while loading map: bad object '" << jsonObject << "'." << std::endl;
-					continue;
-				}
-
-				double objectWidth=jsonObject["width"].get<double>();
-				double objectHeight=jsonObject["height"].get<double>();
-				double objectCameraX=jsonObject["camera"]["x"].get<double>();
-				double objectCameraY=jsonObject["camera"]["y"].get<double>();
-				double objectCameraZ=jsonObject["camera"]["z"].get<double>();
-				double objectCameraYaw=jsonObject["camera"]["yaw"].get<double>();
-
-				if (objectWidth<=0.0 || objectHeight<=0.0) {
-					std::cout << "Warning while loading map: bad object '" << jsonObject << "'." << std::endl;
-					continue;
-				}
-
-				Camera objectCamera(objectCameraX, objectCameraY, objectCameraZ, objectCameraYaw);
-
-				Object::MovementParameters objectMovementParameters;
-				json jsonMovementParameters=jsonObject["movementParameters"];
-				if (jsonMovementParameters.is_object()) {
-					if (jsonMovementParameters["standHeight"].is_number())
-						objectMovementParameters.standHeight=jsonMovementParameters["standHeight"].get<double>();
-				}
-
-				Object *object=new Object(objectWidth, objectHeight, objectCamera, objectMovementParameters);
-
-				for(auto &textureEntry : jsonObject["textures"].items()) {
-					json jsonObjectTexture=textureEntry.value();
-					if (!jsonObjectTexture.is_number())
-						continue;
-
-					int textureId=jsonObjectTexture.get<int>();
-
-					Texture *texture=getTextureById(textureId);
-					if (texture==NULL)
-						continue;
-
-					object->addTexture(texture);
-				}
-
-				objects->push_back(object);
 			}
 		}
 
@@ -377,6 +334,61 @@ namespace TremorEngine {
 		block->height=blockHeight;
 		block->colour=blockColour;
 		block->textureId=textureId;
+
+		return true;
+	}
+
+	bool Map::jsonParseObject(const json &objectObject) {
+		// Sanity check
+		if (!objectObject.is_object())
+			return false;
+
+		// Check standard fields exist and are sensible
+		if (objectObject.count("width")!=1 || !objectObject["width"].is_number() ||
+		    objectObject.count("height")!=1 || !objectObject["height"].is_number() ||
+		    objectObject.count("textures")!=1 || !objectObject["textures"].is_array() ||
+		    objectObject.count("camera")!=1 || !objectObject["camera"].is_object())
+		    return false;
+
+		double objectWidth=objectObject["width"].get<double>();
+		double objectHeight=objectObject["height"].get<double>();
+
+		if (objectWidth<=0.0 || objectHeight<=0.0)
+			return false;
+
+		// Parse camera parameters
+		Camera objectCamera;
+		if (!jsonParseCamera(objectObject["camera"], objectCamera))
+			return false;
+
+		// Parse movement parameters
+		Object::MovementParameters objectMovementParameters;
+		json jsonMovementParameters=objectObject["movementParameters"];
+		if (jsonMovementParameters.is_object()) {
+			if (jsonMovementParameters["standHeight"].is_number())
+				objectMovementParameters.standHeight=jsonMovementParameters["standHeight"].get<double>();
+		}
+
+		// Create object
+		Object *object=new Object(objectWidth, objectHeight, objectCamera, objectMovementParameters);
+
+		// Add textures
+		for(auto &textureEntry : objectObject["textures"].items()) {
+			json objectObjectTexture=textureEntry.value();
+			if (!objectObjectTexture.is_number())
+				continue;
+
+			int textureId=objectObjectTexture.get<int>();
+
+			Texture *texture=getTextureById(textureId);
+			if (texture==NULL)
+				continue;
+
+			object->addTexture(texture);
+		}
+
+		// Add object to map's list of objects
+		objects->push_back(object);
 
 		return true;
 	}
