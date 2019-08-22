@@ -61,7 +61,8 @@ namespace TremorEngine {
 		bool jsonParseMetadata(const json &mapObject);
 		bool jsonParseTexture(const json &textureObject);
 		bool jsonParseBlock(const json &blockObject);
-		bool jsonParseColour(const json &object, Colour &colour);
+
+		bool jsonParseColour(const json &object, Colour &colour) const; // colour unchanged if fails
 	};
 }
 

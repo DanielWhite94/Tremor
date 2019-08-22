@@ -381,7 +381,7 @@ namespace TremorEngine {
 		return true;
 	}
 
-	bool Map::jsonParseColour(const json &object, Colour &colour) {
+	bool Map::jsonParseColour(const json &object, Colour &colour) const {
 		// Misssing fields?
 		if (!object.is_object() || !object["r"].is_number() || !object["g"].is_number() || !object["b"].is_number())
 			return false;
