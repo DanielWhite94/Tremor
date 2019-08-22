@@ -307,14 +307,13 @@ namespace TremorEngine {
 			return false;
 
 		if (blockObject.count("x")!=1 || !blockObject["x"].is_number() ||
-		    blockObject.count("y")!=1 || !blockObject["y"].is_number() ||
-		    blockObject.count("height")!=1 || !blockObject["height"].is_number())
+		    blockObject.count("y")!=1 || !blockObject["y"].is_number())
 			return false;
 
 		// Grab block properties
 		int blockX=blockObject["x"].get<int>();
 		int blockY=blockObject["y"].get<int>();
-		double blockHeight=blockObject["height"].get<double>();
+		double blockHeight=(blockObject.count("height")==1 && blockObject["height"].is_number() ? blockObject["height"].get<double>() : 1.0);
 		if (blockX<0 || blockX>=width || blockY<0 || blockY>=height || blockHeight<=0.0)
 			return false;
 
