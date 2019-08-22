@@ -400,4 +400,24 @@ namespace TremorEngine {
 
 		return true;
 	}
+
+	bool Map::jsonParseCamera(const json &object, Camera &camera) const {
+		// Misssing fields?
+		if (!object.is_object() ||
+		    object.count("x")!=1 || !object["x"].is_number() ||
+		    object.count("y")!=1 || !object["y"].is_number())
+			return false;
+
+		// Get values
+		double x=object["x"].get<double>();
+		double y=object["y"].get<double>();
+		double z=(object.count("z")==1 ? object["z"].get<double>() : 0.5);
+		double yaw=(object.count("yaw")==1 ? object["yaw"].get<double>() : 0.0);
+
+		// Copy values into given camera
+		camera=Camera(x, y, z, yaw);
+
+		return true;
+	}
+
 };

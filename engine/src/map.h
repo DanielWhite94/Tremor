@@ -63,6 +63,7 @@ namespace TremorEngine {
 		bool jsonParseBlock(const json &blockObject);
 
 		bool jsonParseColour(const json &object, Colour &colour) const; // colour unchanged if fails
+		bool jsonParseCamera(const json &object, Camera &camera) const; // camera unchanged if fails
 	};
 }
 
