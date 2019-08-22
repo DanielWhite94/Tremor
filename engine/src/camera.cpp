@@ -5,6 +5,10 @@
 
 namespace TremorEngine {
 
+	Camera::Camera(void): x(0.0), y(0.0), z(0.0), yaw(0.0), fov(M_PI/3.0), maxDist(64.0) {
+		setPitch(0.0);
+	}
+
 	Camera::Camera(double x, double y, double z, double yaw, double gPitch, double fov, double maxDist): x(x), y(y), z(z), yaw(yaw), fov(fov), maxDist(maxDist) {
 		setPitch(gPitch);
 	}

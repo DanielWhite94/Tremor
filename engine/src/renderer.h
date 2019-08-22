@@ -34,6 +34,9 @@ namespace TremorEngine {
 		void setBrightnessMin(double value);
 		void setBrightnessMax(double value);
 
+		void setGroundColour(const Colour &colour);
+		void setSkyColour(const Colour &colour);
+
 		void render(const Camera &camera, bool drawZBuffer); // if drawZBuffer is true then all standard rendering logic is carried out, and then at the very end we draw a heatmap of the z-buffer over the top
 		void renderTopDown(const Camera &camera);
 

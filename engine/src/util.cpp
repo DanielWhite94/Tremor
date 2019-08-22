@@ -1,6 +1,7 @@
 #ifndef TREMORENGINE_RENDERER_H
 #define TREMORENGINE_RENDERER_H
 
+#include <algorithm>
 #include <cmath>
 #include <time.h>
 
@@ -25,6 +26,10 @@ namespace TremorEngine {
 		if (angle<0.0)
 			angle+=2.0*M_PI;
 		return angle;
+	}
+
+	int clamp(int x, int a, int b) {
+		return std::max(a, std::min(b, x));
 	}
 };
 

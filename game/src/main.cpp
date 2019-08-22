@@ -4,8 +4,6 @@
 
 #include <engine.h>
 
-#include "map.h"
-
 using namespace TremorEngine;
 
 // Parameters
@@ -20,8 +18,6 @@ const double turnFactor=0.0006;
 const double verticalTurnFactor=0.0004;
 const Object::MovementParameters playerMovementParametersStart={.jumpTime=1000000llu, .standHeight=0.5, .crouchHeight=0.3, .jumpHeight=0.3};
 
-const Camera playerCameraStart(-5.928415,10.382321,0.500000,6.261246);
-
 // Variables
 SDL_Window *window;
 SDL_Renderer *sdlRenderer;
@@ -35,7 +31,7 @@ Map *map=NULL;
 Object *playerObject=NULL;
 
 // Functions
-void demoInit(void);
+void demoInit(const char *mapFile);
 void demoQuit(void);
 
 void demoCheckEvents(void);
@@ -43,8 +39,18 @@ void demoPhysicsTick(void);
 void demoRedraw(void);
 
 int main(int argc, char **argv) {
-	demoInit();
+	// Parse arguments.
+	if (argc!=2) {
+		printf("Usage: %s mapfile\n", argv[0]);
+		return 0;
+	}
 
+	const char *mapFile=argv[1];
+
+	// Initialise
+	demoInit(mapFile);
+
+	// Main loop
 	while(1) {
 		MicroSeconds tickStartTime=microSecondsGet();
 
@@ -72,12 +78,13 @@ int main(int argc, char **argv) {
 			printf("fps %.1f (max inf)\n", actualFps);
 	}
 
+	// Quit
 	demoQuit();
 
 	return EXIT_SUCCESS;
 }
 
-void demoInit(void) {
+void demoInit(const char *mapFile) {
 	// Initialse SDL and create window+renderer
 	// TODO: Throw exceptions instead?
 	if(SDL_Init(SDL_INIT_VIDEO)<0) {
@@ -102,16 +109,23 @@ void demoInit(void) {
 	SDL_SetRelativeMouseMode(SDL_TRUE);
 
 	// Create map
-	map=new Map(sdlRenderer);
+	map=new Map(sdlRenderer, mapFile);
+	if (!map->getHasInit()) {
+		printf("Could not load map at '%s'.\n", mapFile);
+		exit(EXIT_FAILURE);
+	}
 
 	// Create ray casting renderer
 	double unitBlockHeight=(512.0*windowWidth)/640.0;
 	renderer=new Renderer(sdlRenderer, windowWidth, windowHeight, unitBlockHeight, &mapGetBlockInfoFunctor, map, &mapGetObjectsInRangeFunctor, map);
-	renderer->setBrightnessMin(0.5);
-	renderer->setBrightnessMax(1.0);
+	renderer->setBrightnessMin(map->getBrightnessMin());
+	renderer->setBrightnessMax(map->getBrightnessMax());
+	renderer->setGroundColour(map->getGroundColour());
+	renderer->setSkyColour(map->getSkyColour());
 
 	// Create player object
-	playerObject=new Object(0.3, 0.6, playerCameraStart, playerMovementParametersStart);
+	Camera playerCamera(map->getWidth()/2.0, map->getHeight()/2.0, playerMovementParametersStart.standHeight, 0.0);
+	playerObject=new Object(0.3, 0.6, playerCamera, playerMovementParametersStart);
 }
 
 void demoQuit(void) {
