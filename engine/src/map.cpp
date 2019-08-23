@@ -107,7 +107,7 @@ namespace TremorEngine {
 			blocks[i].height=0.0;
 
 		// Parse JSON data - load textures
-		if (jsonMap.count("textures")==1 && jsonMap["textures"].is_array())
+		if (renderer!=NULL && jsonMap.count("textures")==1 && jsonMap["textures"].is_array())
 			for(auto &entry : jsonMap["textures"].items()) {
 				json jsonTexture=entry.value();
 				if (!jsonParseTexture(jsonTexture))
@@ -218,6 +218,10 @@ namespace TremorEngine {
 	}
 
 	bool Map::addTexture(int id, const char *path) {
+		// No renderer provided in constructor?
+		if (renderer==NULL)
+			return false;
+
 		// Does a texture already exist with this id?
 		if (getTextureById(id)!=NULL)
 			return false;

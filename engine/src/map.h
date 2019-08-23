@@ -20,6 +20,7 @@ namespace TremorEngine {
 
 	class Map {
 	public:
+		// renderer can be NULL in constructor, but then textures will always fail to add
 		Map(SDL_Renderer *renderer, int width, int height);
 		Map(SDL_Renderer *renderer, const char *file);
 		~Map();
