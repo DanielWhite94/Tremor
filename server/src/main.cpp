@@ -2,6 +2,7 @@
 #include <cassert>
 #include <cstdint>
 #include <cstdio>
+#include <cstring>
 #include <signal.h>
 #include <unistd.h>
 
@@ -13,10 +14,14 @@
 using namespace TremorEngine;
 
 #define serverMaxClients 32
+#define serverClientTcpBufferSize 1024
 
 struct ServerClient {
 	int socketSetNumber; // set to -1 if slot unused
 	TCPsocket tcpSocket;
+
+	uint8_t tcpBuffer[serverClientTcpBufferSize];
+	size_t tcpBufferNext;
 };
 ServerClient serverClients[serverMaxClients];
 
@@ -30,6 +35,9 @@ void serverQuit(void);
 
 int serverGetClientCount(void);
 bool serverAcceptClient(void);
+void serverRemoveClient(int id);
+void serverReadClients(void);
+bool serverReadClient(ServerClient &client);
 
 void serverLog(const char *format, ...);
 void serverLogV(const char *format, va_list ap);
@@ -72,6 +80,9 @@ int main(int argc, char **argv) {
 	while(1) {
 		// Attempt to accept new client connection
 		serverAcceptClient();
+
+		// Check for socket activity
+		serverReadClients();
 
 		// Delay
 		// TODO: probably want to remove this
@@ -177,11 +188,93 @@ bool serverAcceptClient(void) {
 	assert(serverClients[clientSocketSetNumber].socketSetNumber==-1);
 	serverClients[clientSocketSetNumber].socketSetNumber=clientSocketSetNumber;
 	serverClients[clientSocketSetNumber].tcpSocket=clientTcpSocket;
+	serverClients[clientSocketSetNumber].tcpBufferNext=0;
 
 	// Write to log
 	IPaddress *remoteIp=SDLNet_TCP_GetPeerAddress(clientTcpSocket);
 	uint32_t host=remoteIp->host;
 	serverLog("New client %i (%u.%u.%u.%u:%u)\n", clientSocketSetNumber, host>>24, (host>>16)&255, (host>>8)&255, host&255, remoteIp->port);
+
+	return true;
+}
+
+void serverRemoveClient(int id) {
+	// Bad id?
+	if (id<0 || id>=serverMaxClients)
+		return;
+
+	// No client anyway?
+	ServerClient &client=serverClients[id];
+	if (client.socketSetNumber==-1)
+		return;
+
+	// Close socket and mark disconnected
+	SDLNet_TCP_Close(client.tcpSocket);
+	client.socketSetNumber=-1;
+
+	// Write to log
+	serverLog("Client %i disconnected\n", id);
+}
+
+void serverReadClients(void) {
+	while(SDLNet_CheckSockets(serverSocketSet, 0)>0) {
+		for(size_t i=0; i<serverMaxClients; ++i) {
+			// Grab client in this slot
+			ServerClient &client=serverClients[i];
+			if (client.socketSetNumber==-1)
+				continue;
+
+			// No activity for this client?
+			if (!SDLNet_SocketReady(client.tcpSocket))
+				continue;
+
+			// Buffer full - if so discard first byte (otherwise client would be stuck).
+			if (client.tcpBufferNext==serverClientTcpBufferSize) {
+				memmove(client.tcpBuffer, client.tcpBuffer+1, serverClientTcpBufferSize-1);
+				--client.tcpBufferNext;
+			}
+
+			// Read one byte
+			// TODO: SDL_net seems limited in this regard - passing maxlen>1 may block.
+			if (SDLNet_TCP_Recv(client.tcpSocket, client.tcpBuffer+client.tcpBufferNext, 1)<=0) {
+				serverLog("Client %i bad TCP read, disconnecting client\n", i);
+				serverRemoveClient(i);
+				continue;
+			}
+			++client.tcpBufferNext;
+
+			// See if we have received a full command
+			if (!serverReadClient(client)) {
+				serverRemoveClient(i);
+				continue;
+			}
+		}
+	}
+}
+
+bool serverReadClient(ServerClient &client) {
+	while(1) {
+		// Check for a full command (terminated by either '\n' or '\r\n')
+		uint8_t *newlinePtr=(uint8_t *)memchr(client.tcpBuffer, '\n', client.tcpBufferNext);
+		if (newlinePtr==NULL)
+			break;
+
+		if (newlinePtr>client.tcpBuffer && *(newlinePtr-1)=='\r')
+			*(--newlinePtr)='\n'; // HACK to trim '\r' - results in a 2nd empty command straight after this one
+
+		size_t commandLen=newlinePtr-client.tcpBuffer;
+
+		// Attempt to parse command
+		// HACK: parse command as a string
+		*newlinePtr='\0';
+		const char *command=(const char *)client.tcpBuffer;
+
+		if (strcmp(command, "quit")==0)
+			return false;
+
+		// Strip command from front of buffer
+		memmove(client.tcpBuffer, client.tcpBuffer+commandLen+1, client.tcpBufferNext-=commandLen+1);
+	}
 
 	return true;
 }
