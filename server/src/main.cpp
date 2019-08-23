@@ -37,6 +37,8 @@ bool serverAcceptClient(void);
 void serverRemoveClient(int id);
 void serverReadClients(void);
 bool serverReadClient(ServerClient &client);
+bool serverSendDataToClient(ServerClient &client, const uint8_t *data, size_t len);
+bool serverSendStrToClient(ServerClient &client, const char *str);
 
 void serverLog(const char *format, ...);
 void serverLogV(const char *format, va_list ap);
@@ -280,6 +282,15 @@ bool serverReadClient(ServerClient &client) {
 	}
 
 	return true;
+}
+
+bool serverSendDataToClient(ServerClient &client, const uint8_t *data, size_t len) {
+	// TODO: this is blocking, make it not so - another SDL_net limitation
+	return (SDLNet_TCP_Send(client.tcpSocket, data, len)==len);
+}
+
+bool serverSendStrToClient(ServerClient &client, const char *str) {
+	return serverSendDataToClient(client, (const uint8_t *)str, strlen(str));
 }
 
 void serverSigIntHandler(int s) {
