@@ -17,9 +17,8 @@ using namespace TremorEngine;
 #define serverClientTcpBufferSize 1024
 
 struct ServerClient {
-	int socketSetNumber; // set to -1 if slot unused
+	int tcSocketSetNumber; // set to -1 if slot unused
 	TCPsocket tcpSocket;
-
 	uint8_t tcpBuffer[serverClientTcpBufferSize];
 	size_t tcpBufferNext;
 };
@@ -101,7 +100,7 @@ void serverInit(const char *mapFile) {
 
 	// Mark all entries in the clients array empty
 	for(size_t i=0; i<serverMaxClients; ++i)
-		serverClients[i].socketSetNumber=-1;
+		serverClients[i].tcSocketSetNumber=-1;
 
 	// Register interrupt signal handler
 	struct sigaction sigIntHandler;
@@ -143,7 +142,7 @@ void serverQuit(void) {
 	// Close all client connections
 	for(size_t i=0; i<serverMaxClients; ++i) {
 		// No client in this slot?
-		if (serverClients[i].socketSetNumber==-1)
+		if (serverClients[i].tcSocketSetNumber==-1)
 			continue;
 
 		// Remove from socket set and close socket
@@ -166,7 +165,7 @@ void serverQuit(void) {
 int serverGetClientCount(void) {
 	int count=0;
 	for(size_t i=0; i<serverMaxClients; ++i)
-		count+=(serverClients[i].socketSetNumber>=0);
+		count+=(serverClients[i].tcSocketSetNumber>=0);
 	return count;
 }
 
@@ -181,19 +180,19 @@ bool serverAcceptClient(void) {
 		return false;
 
 	// Add socket to set
-	int clientSocketSetNumber=SDLNet_TCP_AddSocket(serverSocketSet, clientTcpSocket); // TODO: check result?
-	assert(clientSocketSetNumber>=0 && clientSocketSetNumber<serverMaxClients);
+	int clientTcpSocketSetNumber=SDLNet_TCP_AddSocket(serverSocketSet, clientTcpSocket); // TODO: check result?
+	assert(clientTcpSocketSetNumber>=0 && clientTcpSocketSetNumber<serverMaxClients);
 
 	// Add client to array
-	assert(serverClients[clientSocketSetNumber].socketSetNumber==-1);
-	serverClients[clientSocketSetNumber].socketSetNumber=clientSocketSetNumber;
-	serverClients[clientSocketSetNumber].tcpSocket=clientTcpSocket;
-	serverClients[clientSocketSetNumber].tcpBufferNext=0;
+	assert(serverClients[clientTcpSocketSetNumber].tcSocketSetNumber==-1);
+	serverClients[clientTcpSocketSetNumber].tcSocketSetNumber=clientTcpSocketSetNumber;
+	serverClients[clientTcpSocketSetNumber].tcpSocket=clientTcpSocket;
+	serverClients[clientTcpSocketSetNumber].tcpBufferNext=0;
 
 	// Write to log
 	IPaddress *remoteIp=SDLNet_TCP_GetPeerAddress(clientTcpSocket);
 	uint32_t host=remoteIp->host;
-	serverLog("New client %i (%u.%u.%u.%u:%u)\n", clientSocketSetNumber, host>>24, (host>>16)&255, (host>>8)&255, host&255, remoteIp->port);
+	serverLog("New client %i (%u.%u.%u.%u:%u)\n", clientTcpSocketSetNumber, host>>24, (host>>16)&255, (host>>8)&255, host&255, remoteIp->port);
 
 	return true;
 }
@@ -205,12 +204,12 @@ void serverRemoveClient(int id) {
 
 	// No client anyway?
 	ServerClient &client=serverClients[id];
-	if (client.socketSetNumber==-1)
+	if (client.tcSocketSetNumber==-1)
 		return;
 
 	// Close socket and mark disconnected
 	SDLNet_TCP_Close(client.tcpSocket);
-	client.socketSetNumber=-1;
+	client.tcSocketSetNumber=-1;
 
 	// Write to log
 	serverLog("Client %i disconnected\n", id);
@@ -221,7 +220,7 @@ void serverReadClients(void) {
 		for(size_t i=0; i<serverMaxClients; ++i) {
 			// Grab client in this slot
 			ServerClient &client=serverClients[i];
-			if (client.socketSetNumber==-1)
+			if (client.tcSocketSetNumber==-1)
 				continue;
 
 			// No activity for this client?
