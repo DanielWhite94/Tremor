@@ -8,6 +8,10 @@
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_net.h>
 
+#include <engine.h>
+
+using namespace TremorEngine;
+
 #define serverMaxClients 32
 
 struct ServerClient {
@@ -19,7 +23,9 @@ ServerClient serverClients[serverMaxClients];
 TCPsocket serverTcpSocket=NULL;
 SDLNet_SocketSet serverSocketSet=NULL;
 
-void serverInit(void);
+Map *map=NULL;
+
+void serverInit(const char *mapFile);
 void serverQuit(void);
 
 int serverGetClientCount(void);
@@ -31,8 +37,16 @@ void serverLogV(const char *format, va_list ap);
 void serverSigIntHandler(int s);
 
 int main(int argc, char **argv) {
+	// Check and parse arguments
+	if (argc!=2) {
+		serverLog("Usage: %s mapfile\n", argv[0]);
+		exit(EXIT_FAILURE);
+	}
+
+	const char *mapFile=argv[1];
+
 	// Initialise
-	serverInit();
+	serverInit(mapFile);
 
 	// Open server socket
 	IPaddress ip;
@@ -70,7 +84,10 @@ int main(int argc, char **argv) {
 	return 0;
 }
 
-void serverInit(void) {
+void serverInit(const char *mapFile) {
+	serverLog("Tremor Server\n");
+	serverLog("Initialising...\n");
+
 	// Mark all entries in the clients array empty
 	for(size_t i=0; i<serverMaxClients; ++i)
 		serverClients[i].socketSetNumber=-1;
@@ -93,11 +110,25 @@ void serverInit(void) {
 		exit(EXIT_FAILURE);
 	}
 
+	serverLog("Initialised SDL\n");
+
+	// Load map
+	map=new Map(NULL, mapFile);
+	if (map==NULL || !map->getHasInit()) {
+		serverLog("Could not load map at: %s\n", mapFile);
+		exit(EXIT_FAILURE);
+	}
+
+	serverLog("Loaded map at: %s\n", mapFile);
+
 	// Write to log
-	serverLog("Server initialised\n");
+	serverLog("Initialisation Complete\n");
 }
 
 void serverQuit(void) {
+	// Write to log
+	serverLog("Server quitting...\n");
+
 	// Close all client connections
 	for(size_t i=0; i<serverMaxClients; ++i) {
 		// No client in this slot?
@@ -139,7 +170,7 @@ bool serverAcceptClient(void) {
 		return false;
 
 	// Add socket to set
-	int clientSocketSetNumber=SDLNet_TCP_AddSocket(serverSocketSet, clientTcpSocket); // ..... check result?
+	int clientSocketSetNumber=SDLNet_TCP_AddSocket(serverSocketSet, clientTcpSocket); // TODO: check result?
 	assert(clientSocketSetNumber>=0 && clientSocketSetNumber<serverMaxClients);
 
 	// Add client to array
