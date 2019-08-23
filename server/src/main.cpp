@@ -2,6 +2,7 @@
 #include <cassert>
 #include <cstdint>
 #include <cstdio>
+#include <cstdlib>
 #include <cstring>
 #include <signal.h>
 #include <unistd.h>
@@ -21,6 +22,9 @@ struct ServerClient {
 	TCPsocket tcpSocket;
 	uint8_t tcpBuffer[serverClientTcpBufferSize];
 	size_t tcpBufferNext;
+
+	UDPsocket udpSocket;
+	uint32_t udpSecret;
 };
 ServerClient serverClients[serverMaxClients];
 
@@ -103,6 +107,9 @@ int main(int argc, char **argv) {
 void serverInit(const char *mapFile) {
 	serverLog("Tremor Server\n");
 	serverLog("Initialising...\n");
+
+	// Initialise PRNG
+	srand(time(NULL)); // TODO: do better
 
 	// Mark all entries in the clients array empty
 	for(size_t i=0; i<serverMaxClients; ++i)
@@ -190,15 +197,18 @@ bool serverAcceptClient(void) {
 	assert(clientTcpSocketSetNumber>=0 && clientTcpSocketSetNumber<serverMaxClients);
 
 	// Add client to array
-	assert(serverClients[clientTcpSocketSetNumber].tcSocketSetNumber==-1);
-	serverClients[clientTcpSocketSetNumber].tcSocketSetNumber=clientTcpSocketSetNumber;
-	serverClients[clientTcpSocketSetNumber].tcpSocket=clientTcpSocket;
-	serverClients[clientTcpSocketSetNumber].tcpBufferNext=0;
+	ServerClient &client=serverClients[clientTcpSocketSetNumber];
+	assert(client.tcSocketSetNumber==-1);
+	client.tcSocketSetNumber=clientTcpSocketSetNumber;
+	client.tcpSocket=clientTcpSocket;
+	client.tcpBufferNext=0;
+	client.udpSocket=NULL;
+	client.udpSecret=serverRand32();
 
 	// Write to log
 	IPaddress *remoteIp=SDLNet_TCP_GetPeerAddress(clientTcpSocket);
 	uint32_t host=remoteIp->host;
-	serverLog("New client %i (%u.%u.%u.%u:%u)\n", clientTcpSocketSetNumber, host>>24, (host>>16)&255, (host>>8)&255, host&255, remoteIp->port);
+	serverLog("New client: id=%i tcp addr=(%u.%u.%u.%u:%u), secret 0x%08X\n", clientTcpSocketSetNumber, host>>24, (host>>16)&255, (host>>8)&255, host&255, remoteIp->port, client.udpSecret);
 
 	return true;
 }
@@ -258,6 +268,8 @@ void serverReadClients(void) {
 }
 
 bool serverReadClient(ServerClient &client) {
+	char responseStr[256];
+
 	while(1) {
 		// Check for a full command (terminated by either '\n' or '\r\n')
 		uint8_t *newlinePtr=(uint8_t *)memchr(client.tcpBuffer, '\n', client.tcpBufferNext);
@@ -276,6 +288,14 @@ bool serverReadClient(ServerClient &client) {
 
 		if (strcmp(command, "quit")==0)
 			return false;
+		else if (strncmp(command, "get ", 4)==0) {
+			const char *commandGetName=command+4;
+			if (strcmp(commandGetName, "secret")==0) {
+				sprintf(responseStr, "got secret %08X\n", client.udpSecret);
+				if (!serverSendStrToClient(client, responseStr))
+					return false;
+			}
+		}
 
 		// Strip command from front of buffer
 		memmove(client.tcpBuffer, client.tcpBuffer+commandLen+1, client.tcpBufferNext-=commandLen+1);
