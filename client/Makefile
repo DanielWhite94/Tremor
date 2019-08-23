@@ -10,7 +10,7 @@ SRCDIR = src
 BUILDDIR = build
 
 OUTDIR = ../bin
-OUTFILE = ../bin/game
+OUTFILE = ../bin/client
 ENGINELIB = ../libengine.a
 
 SRCS = $(wildcard $(SRCDIR)/*.cpp)
