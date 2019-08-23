@@ -41,6 +41,10 @@ bool serverReadClient(ServerClient &client);
 void serverLog(const char *format, ...);
 void serverLogV(const char *format, va_list ap);
 
+uint8_t serverRand8(void);
+uint16_t serverRand16(void);
+uint32_t serverRand32(void);
+
 void serverSigIntHandler(int s);
 
 int main(int argc, char **argv) {
@@ -293,4 +297,16 @@ void serverLog(const char *format, ...) {
 void serverLogV(const char *format, va_list ap) {
 	// TODO: Add timestamps and any other data
 	vprintf(format, ap);
+}
+
+uint8_t serverRand8(void) {
+	return rand()&255;
+}
+
+uint16_t serverRand16(void) {
+	return ((((uint16_t)serverRand8())<<8)|serverRand8());
+}
+
+uint32_t serverRand32(void) {
+	return ((((uint32_t)serverRand16())<<16)|serverRand16());
 }
