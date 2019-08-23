@@ -9,14 +9,15 @@ LFLAGS += -lSDL2 -lm -lSDL2_gfx -lSDL2_image
 SRCDIR = src
 BUILDDIR = build
 
-OUTFILE = ../main
+OUTDIR = ../bin
+OUTFILE = ../bin/game
 ENGINELIB = ../libengine.a
 
 SRCS = $(wildcard $(SRCDIR)/*.cpp)
 
 OBJS = $(patsubst $(SRCDIR)/%.cpp, $(BUILDDIR)/%.o, $(SRCS))
 
-ALL: $(OBJS)
+ALL: $(OBJS) $(OUTDIR)
 	$(CPP) $(CFLAGS) $(LFLAGS) $(OBJS) $(ENGINELIB) -o $(OUTFILE)
 
 $(BUILDDIR)/%.o: $(SRCDIR)/%.cpp $(BUILDDIR)
@@ -24,6 +25,9 @@ $(BUILDDIR)/%.o: $(SRCDIR)/%.cpp $(BUILDDIR)
 
 $(BUILDDIR):
 	mkdir -p $(BUILDDIR)
+
+$(OUTDIR):
+	mkdir -p $(OUTDIR)
 
 clean:
 	rm -f $(OBJS)

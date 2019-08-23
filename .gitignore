@@ -7,5 +7,5 @@
 # Library files
 *.a
 
-# Executable
-main
+# Executables
+bin/*
