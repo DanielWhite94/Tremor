@@ -13,6 +13,8 @@ public:
 	bool sendData(const uint8_t *data, size_t len);
 	bool sendStr(const char *str);
 private:
+	bool isConnectedFlag;
+
 	TCPsocket tcpSocket;
 
 };

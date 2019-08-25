@@ -1,7 +1,8 @@
 #include "connection.h"
 
 Connection::Connection(const char *host, int port) {
-	// Set tcpSocket to NULL so that if we return early in error then isConnected will correctly return false.
+	// Set fields to indicate not connected so that if we return early in error then isConnected will correctly return false.
+	isConnectedFlag=false;
 	tcpSocket=NULL;
 
 	// Check port number is sensible.
@@ -17,6 +18,8 @@ Connection::Connection(const char *host, int port) {
 	tcpSocket=SDLNet_TCP_Open(&address);
 	if (tcpSocket==NULL)
 		return;
+
+	isConnectedFlag=true;
 }
 
 Connection::~Connection() {
@@ -25,7 +28,7 @@ Connection::~Connection() {
 }
 
 bool Connection::isConnected(void) {
-	return (tcpSocket!=NULL);
+	return isConnectedFlag;
 }
 
 bool Connection::sendData(const uint8_t *data, size_t len) {
