@@ -27,3 +27,12 @@ Connection::~Connection() {
 bool Connection::isConnected(void) {
 	return (tcpSocket!=NULL);
 }
+
+bool Connection::sendData(const uint8_t *data, size_t len) {
+	// TODO: this is blocking, make it not so (seems like an SDL_net limitation).
+	return (SDLNet_TCP_Send(tcpSocket, data, len)==len);
+}
+
+bool Connection::sendStr(const char *str) {
+	return sendData((const uint8_t *)str, strlen(str)+1);
+}

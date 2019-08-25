@@ -1,3 +1,5 @@
+#include <stdint.h>
+
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_net.h>
 
@@ -8,6 +10,8 @@ public:
 
 	bool isConnected(void);
 
+	bool sendData(const uint8_t *data, size_t len);
+	bool sendStr(const char *str);
 private:
 	TCPsocket tcpSocket;
 
