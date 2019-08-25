@@ -37,5 +37,5 @@ bool Connection::sendData(const uint8_t *data, size_t len) {
 }
 
 bool Connection::sendStr(const char *str) {
-	return sendData((const uint8_t *)str, strlen(str)+1);
+	return sendData((const uint8_t *)str, strlen(str));
 }
