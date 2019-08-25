@@ -22,9 +22,7 @@ Connection *serverConnection=NULL;
 void clientInit(const char *serverHost, int serverPort);
 void clientQuit(void);
 
-void clientCheckEvents(void);
-void clientPhysicsTick(void);
-void clientRedraw(void);
+void clientCheckSdlEvents(void);
 
 int main(int argc, char **argv) {
 	// Parse arguments.
@@ -41,8 +39,8 @@ int main(int argc, char **argv) {
 
 	// Main loop
 	while(1) {
-		// Check events
-		clientCheckEvents();
+		// Check SDL events
+		clientCheckSdlEvents();
 	}
 
 	// Quit
@@ -100,7 +98,7 @@ void clientQuit(void) {
 	SDL_Quit();
 }
 
-void clientCheckEvents(void) {
+void clientCheckSdlEvents(void) {
 	SDL_Event event;
 	while (SDL_PollEvent(&event)) {
 		switch(event.type) {
