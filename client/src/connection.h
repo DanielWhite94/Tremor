@@ -10,11 +10,18 @@ public:
 
 	bool isConnected(void);
 
+	bool readLine(char *buffer); // TODO: add buffer size to avoid overflows
+
 	bool sendData(const uint8_t *data, size_t len);
 	bool sendStr(const char *str);
 private:
+	static const size_t tcpBufferSize=1024;
+
 	bool isConnectedFlag;
 
 	TCPsocket tcpSocket;
+	SDLNet_SocketSet socketSet;
 
+	uint8_t tcpBuffer[tcpBufferSize];
+	size_t tcpBufferNext;
 };
