@@ -294,6 +294,10 @@ bool serverReadClient(ServerClient &client) {
 				sprintf(responseStr, "got secret %08X\n", client.udpSecret);
 				if (!serverSendStrToClient(client, responseStr))
 					return false;
+			} else if (strcmp(commandGetName, "map")==0) {
+				sprintf(responseStr, "got map %s\n", map->getFile());
+				if (!serverSendStrToClient(client, responseStr))
+					return false;
 			}
 		}
 
