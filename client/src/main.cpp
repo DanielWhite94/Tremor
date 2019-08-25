@@ -12,17 +12,25 @@ using namespace TremorEngine;
 const int windowWidth=640;
 const int windowHeight=480;
 
+const char *mapFileDir="maps";
+
 // Variables
 SDL_Window *window;
 SDL_Renderer *sdlRenderer;
 
 Connection *serverConnection=NULL;
 
+MicroSeconds mapFileRequestInterval=5*microSecondsPerSecond;
+MicroSeconds mapFileLastRequestTime=0;
+char *mapFile=NULL;
+
 // Functions
 void clientInit(const char *serverHost, int serverPort);
 void clientQuit(void);
 
 void clientCheckSdlEvents(void);
+
+void clientCheckConnectionEvents(void);
 
 int main(int argc, char **argv) {
 	// Parse arguments.
@@ -41,6 +49,9 @@ int main(int argc, char **argv) {
 	while(1) {
 		// Check SDL events
 		clientCheckSdlEvents();
+
+		// Check connection events
+		clientCheckConnectionEvents();
 	}
 
 	// Quit
@@ -96,6 +107,8 @@ void clientQuit(void) {
 	window=NULL;
 
 	SDL_Quit();
+
+	free(mapFile);
 }
 
 void clientCheckSdlEvents(void) {
@@ -114,4 +127,38 @@ void clientCheckSdlEvents(void) {
 			break;
 		}
 	}
+}
+
+void clientCheckConnectionEvents(void) {
+	// Check if any TCP data has arrived.
+	char line[1024];
+	while(serverConnection->readLine(line)) {
+		if (strncmp(line, "got ", 4)==0) {
+			const char *gotName=line+4;
+			if (strncmp(gotName, "map ", 4)==0) {
+				// Grab map base name
+				const char *mapFileBasename=gotName+4;
+
+				// Create full map file path
+				mapFile=(char *)malloc(strlen(mapFileDir)+1+strlen(mapFileBasename)+1); // TODO: check return
+				sprintf(mapFile, "%s/%s", mapFileDir, mapFileBasename);
+
+				// Print info
+				printf("Server map file is '%s'\n", mapFile);
+			}
+		}
+	}
+
+	// Do we still require a map file?
+	if (mapFile==NULL && microSecondsGet()-mapFileLastRequestTime>=mapFileRequestInterval) {
+		// Send request
+		serverConnection->sendStr("get map\n");
+
+		// Update last request time
+		mapFileLastRequestTime=microSecondsGet();
+
+		// Print info
+		printf("Requesting server map file...\n");
+	}
+
 }
