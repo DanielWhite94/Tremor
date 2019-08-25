@@ -4,7 +4,7 @@ CPP = clang++
 endif
 
 CFLAGS ?= -Wall -std=c++11 -O2 -I../engine/src
-LFLAGS += -lSDL2 -lm -lSDL2_gfx -lSDL2_image
+LFLAGS += -lSDL2 -lm -lSDL2_gfx -lSDL2_image -lSDL2_net
 
 SRCDIR = src
 BUILDDIR = build
