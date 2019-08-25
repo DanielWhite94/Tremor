@@ -326,7 +326,11 @@ void serverLog(const char *format, ...) {
 }
 
 void serverLogV(const char *format, va_list ap) {
-	// TODO: Add timestamps and any other data
+	// Print timestamp
+	long long timeMs=microSecondsGet()/1000;
+	printf("%02llu:%02llu:%02llu:%03llu ", (timeMs/1000/60/60), (timeMs/1000/60)%60, (timeMs/1000)%60, timeMs%1000);
+
+	// Print message
 	vprintf(format, ap);
 }
 
