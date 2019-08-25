@@ -30,6 +30,7 @@ namespace TremorEngine {
 
 		bool getHasInit(void);
 		Texture *getTextureById(int id);
+		const char *getFile(void) const;
 		const std::string getName(void) const;
 		int getWidth(void) const;
 		int getHeight(void) const;
@@ -50,6 +51,7 @@ namespace TremorEngine {
 
 		SDL_Renderer *renderer;
 
+		char *file;
 		std::string name;
 		int width, height;
 		Colour colourGround, colourSky;
