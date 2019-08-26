@@ -33,6 +33,9 @@ bool haveSecret=false;
 MicroSeconds udpPortRequestInterval=5*microSecondsPerSecond;
 MicroSeconds udpPortLastRequestTime=0;
 
+MicroSeconds udpConnectionRequestInterval=5*microSecondsPerSecond;
+MicroSeconds udpConnectionLastRequestTime=0;
+
 const char *serverHost=NULL;
 int serverTcpPort=-1;
 int serverUdpPort=-1;
@@ -217,5 +220,20 @@ void clientCheckConnectionEvents(void) {
 
 		// Print info
 		printf("Requesting UDP port from server...\n");
+	}
+
+	// Do we need to open a UDP connection?
+	if (!serverConnection->isConnectedUdp() && haveSecret && serverUdpPort!=-1 && microSecondsGet()-udpConnectionLastRequestTime>=udpConnectionRequestInterval) {
+		// Print info
+		printf("Attempting to establish UDP connection with %s:%u...\n", serverHost, serverUdpPort);
+
+		// Attempt to connect
+		if (serverConnection->connectUdp(serverHost, serverUdpPort, secret))
+			printf("UDP connection established\n");
+		else
+			printf("UDP connection failed\n");
+
+		// Update request logic fields
+		udpConnectionLastRequestTime=microSecondsGet();
 	}
 }
