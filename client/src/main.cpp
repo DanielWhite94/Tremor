@@ -30,8 +30,12 @@ MicroSeconds secretLastRequestTime=0;
 uint32_t secret;
 bool haveSecret=false;
 
+const char *serverHost=NULL;
+int serverTcpPort=-1;
+int serverUdpPort=-1;
+
 // Functions
-void clientInit(const char *serverHost, int serverPort);
+void clientInit(void);
 void clientQuit(void);
 
 void clientCheckSdlEvents(void);
@@ -45,11 +49,11 @@ int main(int argc, char **argv) {
 		return 0;
 	}
 
-	const char *serverHost=argv[1];
-	int serverPort=atoi(argv[2]);
+	serverHost=argv[1];
+	serverTcpPort=atoi(argv[2]);
 
 	// Initialise
-	clientInit(serverHost, serverPort);
+	clientInit();
 
 	// Main loop
 	while(1) {
@@ -66,7 +70,7 @@ int main(int argc, char **argv) {
 	return EXIT_SUCCESS;
 }
 
-void clientInit(const char *serverHost, int serverPort) {
+void clientInit() {
 	// Initialse SDL and create window+renderer
 	// TODO: Throw exceptions instead?
 	if(SDL_Init(SDL_INIT_VIDEO)<0) {
@@ -97,9 +101,9 @@ void clientInit(const char *serverHost, int serverPort) {
 	SDL_SetRelativeMouseMode(SDL_TRUE);
 
 	// Attempt to connect to server
-	serverConnection=new Connection(serverHost, serverPort);
+	serverConnection=new Connection(serverHost, serverTcpPort);
 	if (!serverConnection->isConnected()) {
-		printf("Could not connect to server at: %s:%i\n", serverHost, serverPort);
+		printf("Could not connect to server at: %s:%i\n", serverHost, serverTcpPort);
 		exit(EXIT_FAILURE);
 	}
 }
