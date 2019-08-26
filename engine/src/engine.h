@@ -12,6 +12,7 @@
 #include "ray.h"
 #include "renderer.h"
 #include "texture.h"
+#include "udppacket.h"
 #include "util.h"
 
 #endif
