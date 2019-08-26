@@ -20,7 +20,7 @@ using namespace TremorEngine;
 #define serverUdpPort 9998
 
 struct ServerClient {
-	int tcSocketSetNumber; // set to -1 if slot unused
+	int tcpSocketSetNumber; // set to -1 if slot unused
 	TCPsocket tcpSocket;
 	uint8_t tcpBuffer[serverClientTcpBufferSize];
 	size_t tcpBufferNext;
@@ -105,7 +105,7 @@ void serverInit(const char *mapFile) {
 
 	// Mark all entries in the clients array empty
 	for(size_t i=0; i<serverMaxClients; ++i)
-		serverClients[i].tcSocketSetNumber=-1;
+		serverClients[i].tcpSocketSetNumber=-1;
 
 	// Register interrupt signal handler
 	struct sigaction sigIntHandler;
@@ -181,7 +181,7 @@ void serverQuit(void) {
 	// Close all client connections
 	for(size_t i=0; i<serverMaxClients; ++i) {
 		// No client in this slot?
-		if (serverClients[i].tcSocketSetNumber==-1)
+		if (serverClients[i].tcpSocketSetNumber==-1)
 			continue;
 
 		// Remove from socket set and close socket
@@ -209,7 +209,7 @@ void serverQuit(void) {
 int serverGetClientCount(void) {
 	int count=0;
 	for(size_t i=0; i<serverMaxClients; ++i)
-		count+=(serverClients[i].tcSocketSetNumber>=0);
+		count+=(serverClients[i].tcpSocketSetNumber>=0);
 	return count;
 }
 
@@ -229,8 +229,8 @@ bool serverAcceptClient(void) {
 
 	// Add client to array
 	ServerClient &client=serverClients[clientTcpSocketSetNumber];
-	assert(client.tcSocketSetNumber==-1);
-	client.tcSocketSetNumber=clientTcpSocketSetNumber;
+	assert(client.tcpSocketSetNumber==-1);
+	client.tcpSocketSetNumber=clientTcpSocketSetNumber;
 	client.tcpSocket=clientTcpSocket;
 	client.tcpBufferNext=0;
 	client.udpPort=-1;
@@ -252,12 +252,12 @@ void serverRemoveClient(int id) {
 
 	// No client anyway?
 	ServerClient &client=serverClients[id];
-	if (client.tcSocketSetNumber==-1)
+	if (client.tcpSocketSetNumber==-1)
 		return;
 
 	// Close socket and mark disconnected
 	SDLNet_TCP_Close(client.tcpSocket);
-	client.tcSocketSetNumber=-1;
+	client.tcpSocketSetNumber=-1;
 
 	// Write to log
 	serverLog("Client %i disconnected\n", id);
@@ -268,7 +268,7 @@ void serverReadClients(void) {
 		for(size_t i=0; i<serverMaxClients; ++i) {
 			// Grab client in this slot
 			ServerClient &client=serverClients[i];
-			if (client.tcSocketSetNumber==-1)
+			if (client.tcpSocketSetNumber==-1)
 				continue;
 
 			// No activity for this client?
@@ -383,7 +383,7 @@ void serverReadUdp(void) {
 		for(i=0; i<serverMaxClients; ++i) {
 			// Grab client
 			ServerClient &client=serverClients[i];
-			if (client.tcSocketSetNumber==-1)
+			if (client.tcpSocketSetNumber==-1)
 				continue;
 
 			// Check if address matches
