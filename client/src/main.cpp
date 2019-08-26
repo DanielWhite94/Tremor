@@ -47,6 +47,7 @@ void clientQuit(void);
 void clientCheckSdlEvents(void);
 
 void clientCheckConnectionTcpEvents(void);
+void clientCheckConnectionUdpEvents(void);
 
 int main(int argc, char **argv) {
 	// Parse arguments.
@@ -68,6 +69,7 @@ int main(int argc, char **argv) {
 
 		// Check connection events
 		clientCheckConnectionTcpEvents();
+		clientCheckConnectionUdpEvents();
 	}
 
 	// Quit
@@ -235,5 +237,12 @@ void clientCheckConnectionTcpEvents(void) {
 
 		// Update request logic fields
 		udpConnectionLastRequestTime=microSecondsGet();
+	}
+}
+
+void clientCheckConnectionUdpEvents(void) {
+	UdpPacket packet;
+	while(serverConnection->udpReadPacket(packet)) {
+		// TODO: handle this
 	}
 }
