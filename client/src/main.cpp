@@ -46,7 +46,7 @@ void clientQuit(void);
 
 void clientCheckSdlEvents(void);
 
-void clientCheckConnectionEvents(void);
+void clientCheckConnectionTcpEvents(void);
 
 int main(int argc, char **argv) {
 	// Parse arguments.
@@ -67,7 +67,7 @@ int main(int argc, char **argv) {
 		clientCheckSdlEvents();
 
 		// Check connection events
-		clientCheckConnectionEvents();
+		clientCheckConnectionTcpEvents();
 	}
 
 	// Quit
@@ -145,7 +145,7 @@ void clientCheckSdlEvents(void) {
 	}
 }
 
-void clientCheckConnectionEvents(void) {
+void clientCheckConnectionTcpEvents(void) {
 	// Check if any TCP data has arrived.
 	char line[1024];
 	while(serverConnection->readLine(line)) {
