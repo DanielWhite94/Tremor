@@ -23,13 +23,13 @@ struct ServerClient {
 	uint8_t tcpBuffer[serverClientTcpBufferSize];
 	size_t tcpBufferNext;
 
-	UDPsocket udpSocket;
+	int udpPort; // set to -1 when not known/connected
 	uint32_t udpSecret;
 };
 ServerClient serverClients[serverMaxClients];
 
+SDLNet_SocketSet serverClientSocketSet=NULL;
 TCPsocket serverTcpSocket=NULL;
-SDLNet_SocketSet serverSocketSet=NULL;
 
 Map *map=NULL;
 
@@ -67,7 +67,7 @@ int main(int argc, char **argv) {
 
 	// Main loop
 	while(1) {
-		// Attempt to accept new client connection
+		// Attempt to accept new client connection (TCP)
 		serverAcceptClient();
 
 		// Check for socket activity
@@ -138,9 +138,9 @@ void serverInit(const char *mapFile) {
 	}
 
 	// Allocate socket set so we can manage multiple sockets
-	serverSocketSet=SDLNet_AllocSocketSet(serverMaxClients);
-	if(serverSocketSet==NULL) {
-		serverLog("Could not alloacte socket set: %s\n", SDLNet_GetError());
+	serverClientSocketSet=SDLNet_AllocSocketSet(serverMaxClients);
+	if(serverClientSocketSet==NULL) {
+		serverLog("Could not allocate client socket set: %s\n", SDLNet_GetError());
 		exit(EXIT_FAILURE);
 	}
 
@@ -159,13 +159,13 @@ void serverQuit(void) {
 			continue;
 
 		// Remove from socket set and close socket
-		SDLNet_TCP_DelSocket(serverSocketSet, serverClients[i].tcpSocket);
+		SDLNet_TCP_DelSocket(serverClientSocketSet, serverClients[i].tcpSocket);
 		SDLNet_TCP_Close(serverClients[i].tcpSocket);
 	}
 
 	// Free socket set
-	if (serverSocketSet!=NULL)
-		SDLNet_FreeSocketSet(serverSocketSet);
+	if (serverClientSocketSet!=NULL)
+		SDLNet_FreeSocketSet(serverClientSocketSet);
 
 	// Close server socket
 	if (serverTcpSocket!=NULL)
@@ -193,7 +193,7 @@ bool serverAcceptClient(void) {
 		return false;
 
 	// Add socket to set
-	int clientTcpSocketSetNumber=SDLNet_TCP_AddSocket(serverSocketSet, clientTcpSocket); // TODO: check result?
+	int clientTcpSocketSetNumber=SDLNet_TCP_AddSocket(serverClientSocketSet, clientTcpSocket); // TODO: check result?
 	assert(clientTcpSocketSetNumber>=0 && clientTcpSocketSetNumber<serverMaxClients);
 
 	// Add client to array
@@ -202,7 +202,7 @@ bool serverAcceptClient(void) {
 	client.tcSocketSetNumber=clientTcpSocketSetNumber;
 	client.tcpSocket=clientTcpSocket;
 	client.tcpBufferNext=0;
-	client.udpSocket=NULL;
+	client.udpPort=-1;
 	client.udpSecret=serverRand32();
 
 	// Write to log
@@ -232,7 +232,7 @@ void serverRemoveClient(int id) {
 }
 
 void serverReadClients(void) {
-	while(SDLNet_CheckSockets(serverSocketSet, 0)>0) {
+	while(SDLNet_CheckSockets(serverClientSocketSet, 0)>0) {
 		for(size_t i=0; i<serverMaxClients; ++i) {
 			// Grab client in this slot
 			ServerClient &client=serverClients[i];
