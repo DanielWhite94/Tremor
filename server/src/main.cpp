@@ -87,7 +87,7 @@ int main(int argc, char **argv) {
 
 		// Delay
 		// TODO: probably want to remove this
-		usleep(10000);
+		usleep(40000);
 	}
 
 	// Quit
