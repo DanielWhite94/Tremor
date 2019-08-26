@@ -25,6 +25,8 @@ struct ServerClient {
 	uint8_t tcpBuffer[serverClientTcpBufferSize];
 	size_t tcpBufferNext;
 
+	uint32_t host;
+
 	int udpPort; // set to -1 when not known/connected
 	uint32_t udpSecret;
 };
@@ -48,6 +50,8 @@ void serverReadClients(void);
 bool serverReadClient(ServerClient &client);
 bool serverSendDataToClient(ServerClient &client, const uint8_t *data, size_t len);
 bool serverSendStrToClient(ServerClient &client, const char *str);
+
+void serverReadUdp(void);
 
 void serverLog(const char *format, ...);
 void serverLogV(const char *format, va_list ap);
@@ -74,6 +78,9 @@ int main(int argc, char **argv) {
 	while(1) {
 		// Attempt to accept new client connection (TCP)
 		serverAcceptClient();
+
+		// Attempt to accept/update UDP connections
+		serverReadUdp();
 
 		// Check for socket activity
 		serverReadClients();
@@ -229,10 +236,11 @@ bool serverAcceptClient(void) {
 	client.udpPort=-1;
 	client.udpSecret=serverRand32();
 
-	// Write to log
 	IPaddress *remoteIp=SDLNet_TCP_GetPeerAddress(clientTcpSocket);
-	uint32_t host=remoteIp->host;
-	serverLog("New client: id=%i tcp addr=(%u.%u.%u.%u:%u), secret 0x%08X\n", clientTcpSocketSetNumber, host>>24, (host>>16)&255, (host>>8)&255, host&255, remoteIp->port, client.udpSecret);
+	client.host=remoteIp->host;
+
+	// Write to log
+	serverLog("New client: id=%i tcp addr=(%u.%u.%u.%u:%u), secret 0x%08X\n", clientTcpSocketSetNumber, client.host>>24, (client.host>>16)&255, (client.host>>8)&255, client.host&255, remoteIp->port, client.udpSecret);
 
 	return true;
 }
@@ -348,6 +356,55 @@ bool serverSendStrToClient(ServerClient &client, const char *str) {
 void serverSigIntHandler(int s) {
 	serverQuit();
 	exit(EXIT_FAILURE);
+}
+
+void serverReadUdp(void) {
+	// Loop while activity on UDP port
+	while(SDLNet_CheckSockets(serverMainUdpSocketSet, 0)>0 && SDLNet_SocketReady(serverMainUdpSocketSet)) {
+		// Attempt to read a single packet
+		char buffer[256];
+		UDPpacket packet;
+		packet.data=(uint8_t *)buffer;
+		packet.maxlen=256;
+		int recvRes=SDLNet_UDP_Recv(serverUdpSocket, &packet);
+		if (recvRes!=1)
+			break;
+
+		// HACK: Convert to uint8_t array to string
+		buffer[packet.len]='\0';
+
+		// Attempt to convert received string into hex secret
+		uint32_t recvSecret;
+		if (sscanf(buffer, "%08X", &recvSecret)!=1)
+			continue;
+
+		// Look for a client which matches this address and secret.
+		size_t i;
+		for(i=0; i<serverMaxClients; ++i) {
+			// Grab client
+			ServerClient &client=serverClients[i];
+			if (client.tcSocketSetNumber==-1)
+				continue;
+
+			// Check if address matches
+			if (packet.address.host!=client.host)
+				continue;
+
+			// Check if secret matches
+			if (recvSecret!=client.udpSecret)
+				continue;
+
+			// Update UDP port
+			client.udpPort=packet.address.port;
+
+			// Print info
+			serverLog("Client %u UDP connection established: port=%u (ip=%u.%u.%u.%u)\n", i, packet.address.port, packet.address.host>>24, (packet.address.host>>16)&255, (packet.address.host>>8)&255, packet.address.host&255);
+
+			break;
+		}
+		if (i==serverMaxClients)
+			serverLog("Received UDP connection request from %u.%u.%u.%u:%u, str='%s', but no associated client\n", packet.address.host>>24, (packet.address.host>>16)&255, (packet.address.host>>8)&255, packet.address.host&255, packet.address.port, buffer);
+	}
 }
 
 void serverLog(const char *format, ...) {
