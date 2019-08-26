@@ -10,6 +10,8 @@ public:
 
 	bool isConnected(void);
 
+	bool connectUdp(const char *host, int port, uint32_t secret);
+
 	bool readLine(char *buffer); // TODO: add buffer size to avoid overflows
 
 	bool sendData(const uint8_t *data, size_t len);
@@ -24,4 +26,10 @@ private:
 
 	uint8_t tcpBuffer[tcpBufferSize];
 	size_t tcpBufferNext;
+
+	UDPsocket udpSocket;
+	IPaddress udpAddress;
+
+	bool udpSendData(const uint8_t *data, size_t len);
+	bool udpSendStr(const char *str);
 };

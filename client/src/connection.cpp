@@ -6,6 +6,7 @@ Connection::Connection(const char *host, int port) {
 	// Set fields to indicate not connected so that if we return early in error then isConnected will correctly return false.
 	isConnectedFlag=false;
 	tcpSocket=NULL;
+	udpSocket=NULL;
 	socketSet=NULL;
 	tcpBufferNext=0;
 
@@ -35,6 +36,13 @@ Connection::Connection(const char *host, int port) {
 }
 
 Connection::~Connection() {
+	// Close udp socket
+	if (udpSocket!=NULL) {
+		if (socketSet!=NULL)
+			SDLNet_UDP_DelSocket(socketSet, udpSocket);
+		SDLNet_UDP_Close(udpSocket);
+	}
+
 	// Close tcp socket
 	if (tcpSocket!=NULL) {
 		if (socketSet!=NULL)
@@ -49,6 +57,35 @@ Connection::~Connection() {
 
 bool Connection::isConnected(void) {
 	return isConnectedFlag;
+}
+
+bool Connection::connectUdp(const char *host, int port, uint32_t secret) {
+	// Already connected?
+	if (udpSocket!=NULL)
+		return false;
+
+	// Resolve IP address
+	if (SDLNet_ResolveHost(&udpAddress, host, port)!=0)
+		return false;
+
+	// Open UDP connection and add to socket set
+	udpSocket=SDLNet_UDP_Open(0);
+	if (udpSocket==NULL)
+		return false;
+
+	if (SDLNet_UDP_AddSocket(socketSet, udpSocket)==-1) {
+		SDLNet_UDP_Close(udpSocket);
+		udpSocket=NULL;
+		return false;
+	}
+
+	// Send secret back to server so it can associate our two connections
+	char buffer[16];
+	sprintf(buffer, "%08X", secret);
+	if (!udpSendStr(buffer))
+		return false;
+
+	return true;
 }
 
 bool Connection::readLine(char *buffer) {
@@ -100,4 +137,23 @@ bool Connection::sendData(const uint8_t *data, size_t len) {
 
 bool Connection::sendStr(const char *str) {
 	return sendData((const uint8_t *)str, strlen(str));
+}
+
+bool Connection::udpSendData(const uint8_t *data, size_t len) {
+	if (udpSocket==NULL)
+		return false;
+
+	// Form packet
+	UDPpacket packet;
+	packet.data=(uint8_t *)data;
+	packet.len=len;
+	packet.maxlen=len;
+	packet.address=udpAddress;
+
+	// Attempt to send
+	return (SDLNet_UDP_Send(udpSocket, -1, &packet)==1);
+}
+
+bool Connection::udpSendStr(const char *str) {
+	return udpSendData((const uint8_t *)str, strlen(str));
 }
