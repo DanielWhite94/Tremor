@@ -19,6 +19,7 @@ namespace TremorEngine {
 		~UdpPacket();
 
 		bool initFromRecvData(const UDPpacket &rawPacket);
+		bool initSendData(UDPpacket &rawPacket); // rawPacket.data and rawPacket.maxlen should be set beforehand, len is filled in
 
 		bool addPlayerEntry(const PlayerEntry &playerEntry);
 

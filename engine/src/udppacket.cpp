@@ -52,6 +52,36 @@ namespace TremorEngine {
 		return true;
 	}
 
+	bool UdpPacket::initSendData(UDPpacket &rawPacket) {
+		// Compute and check length
+		rawPacket.len=4+1+playerCount*4*sizeof(float);
+		if (rawPacket.len>rawPacket.maxlen)
+			return false;
+
+		// Set data
+		uint8_t *dataPtr=rawPacket.data;
+
+		*dataPtr++=(id>>24);
+		*dataPtr++=(id>>16)&255;
+		*dataPtr++=(id>>8)&255;
+		*dataPtr++=id&255;
+
+		*dataPtr++=playerCount;
+
+		for(unsigned i=0; i<playerCount; ++i) {
+			memcpy((void *)dataPtr, (void *)&players[i].x, sizeof(float));
+			dataPtr+=sizeof(float);
+			memcpy((void *)dataPtr, (void *)&players[i].y, sizeof(float));
+			dataPtr+=sizeof(float);
+			memcpy((void *)dataPtr, (void *)&players[i].z, sizeof(float));
+			dataPtr+=sizeof(float);
+			memcpy((void *)dataPtr, (void *)&players[i].yaw, sizeof(float));
+			dataPtr+=sizeof(float);
+		}
+
+		return true;
+	}
+
 	bool UdpPacket::addPlayerEntry(const PlayerEntry &playerEntry) {
 		if (playerCount==256)
 			return false;
