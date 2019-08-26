@@ -2,6 +2,7 @@
 #include <cstdlib>
 #include <fstream>
 #include <iostream>
+#include <libgen.h>
 
 #include "map.h"
 #include "util.h"
@@ -21,6 +22,8 @@ namespace TremorEngine {
 		hasInit=false;
 
 		// Set default field values
+		file=(char *)malloc(1); // TODO: think about this
+		file[0]='\0';
 		name=std::string("Unnamed Map");
 		blocks=NULL;
 		colourGround.r=0;
@@ -53,7 +56,7 @@ namespace TremorEngine {
 		hasInit=true;
 	}
 
-	Map::Map(SDL_Renderer *renderer, const char *file): renderer(renderer) {
+	Map::Map(SDL_Renderer *renderer, const char *gfile): renderer(renderer) {
 		hasInit=false;
 
 		// Allocate textures vector
@@ -63,6 +66,11 @@ namespace TremorEngine {
 		objects=new std::vector<Object *>;
 
 		// Set fields to indicate empty map initially
+		char tempStr[1024]; // TODO: better
+		strcpy(tempStr, gfile);
+		char *baseFile=basename(tempStr);
+		file=(char *)malloc(strlen(baseFile)+1); // TODO: Check return
+		strcpy(file, baseFile);
 		name=std::string("Unnamed Map");
 		width=0;
 		height=0;
@@ -80,7 +88,7 @@ namespace TremorEngine {
 
 		// Load map as JSON object
 		// TODO: check for failure
-		std::ifstream mapStream(file);
+		std::ifstream mapStream(gfile);
 		json jsonRoot;
 		mapStream >> jsonRoot;
 
@@ -107,7 +115,7 @@ namespace TremorEngine {
 			blocks[i].height=0.0;
 
 		// Parse JSON data - load textures
-		if (jsonMap.count("textures")==1 && jsonMap["textures"].is_array())
+		if (renderer!=NULL && jsonMap.count("textures")==1 && jsonMap["textures"].is_array())
 			for(auto &entry : jsonMap["textures"].items()) {
 				json jsonTexture=entry.value();
 				if (!jsonParseTexture(jsonTexture))
@@ -147,6 +155,9 @@ namespace TremorEngine {
 		// Free textures vector
 		// TODO: delete all entries also?
 		delete textures;
+
+		// Free file
+		free(file);
 	}
 
 	bool Map::getBlockInfoFunctor(int mapX, int mapY, Renderer::BlockInfo *info) {
@@ -189,6 +200,10 @@ namespace TremorEngine {
 		return textures->at(id);
 	}
 
+	const char *Map::getFile(void) const {
+		return file;
+	}
+
 	const std::string Map::getName(void) const {
 		return name;
 	}
@@ -218,6 +233,10 @@ namespace TremorEngine {
 	}
 
 	bool Map::addTexture(int id, const char *path) {
+		// No renderer provided in constructor?
+		if (renderer==NULL)
+			return false;
+
 		// Does a texture already exist with this id?
 		if (getTextureById(id)!=NULL)
 			return false;
