@@ -16,6 +16,7 @@ using namespace TremorEngine;
 
 #define serverMaxClients 32
 #define serverClientTcpBufferSize 1024
+#define serverTcpPort 9999
 
 struct ServerClient {
 	int tcSocketSetNumber; // set to -1 if slot unused
@@ -126,7 +127,7 @@ void serverInit(const char *mapFile) {
 
 	// Open server socket
 	IPaddress ip;
-	if(SDLNet_ResolveHost(&ip,NULL,9999)==-1) {
+	if(SDLNet_ResolveHost(&ip, NULL, serverTcpPort)==-1) {
 		serverLog("Could not resolve host: %s\n", SDLNet_GetError());
 		exit(EXIT_FAILURE);
 	}
