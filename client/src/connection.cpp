@@ -59,6 +59,10 @@ bool Connection::isConnected(void) {
 	return isConnectedFlag;
 }
 
+bool Connection::isConnectedUdp(void) {
+	return (isConnectedFlag && udpSocket!=NULL);
+}
+
 bool Connection::connectUdp(const char *host, int port, uint32_t secret) {
 	// Already connected?
 	if (udpSocket!=NULL)
