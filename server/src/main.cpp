@@ -65,26 +65,6 @@ int main(int argc, char **argv) {
 	// Initialise
 	serverInit(mapFile);
 
-	// Open server socket
-	IPaddress ip;
-	if(SDLNet_ResolveHost(&ip,NULL,9999)==-1) {
-		serverLog("Could not resolve host: %s\n", SDLNet_GetError());
-		exit(EXIT_FAILURE);
-	}
-
-	serverTcpSocket=SDLNet_TCP_Open(&ip);
-	if(serverTcpSocket==NULL) {
-		serverLog("Could not open TCP socket: %s\n", SDLNet_GetError());
-		exit(EXIT_FAILURE);
-	}
-
-	// Allocate socket set so we can manage multiple sockets
-	serverSocketSet=SDLNet_AllocSocketSet(serverMaxClients);
-	if(serverSocketSet==NULL) {
-		serverLog("Could not alloacte socket set: %s\n", SDLNet_GetError());
-		exit(EXIT_FAILURE);
-	}
-
 	// Main loop
 	while(1) {
 		// Attempt to accept new client connection
@@ -143,6 +123,26 @@ void serverInit(const char *mapFile) {
 	}
 
 	serverLog("Loaded map at: %s\n", mapFile);
+
+	// Open server socket
+	IPaddress ip;
+	if(SDLNet_ResolveHost(&ip,NULL,9999)==-1) {
+		serverLog("Could not resolve host: %s\n", SDLNet_GetError());
+		exit(EXIT_FAILURE);
+	}
+
+	serverTcpSocket=SDLNet_TCP_Open(&ip);
+	if(serverTcpSocket==NULL) {
+		serverLog("Could not open TCP socket: %s\n", SDLNet_GetError());
+		exit(EXIT_FAILURE);
+	}
+
+	// Allocate socket set so we can manage multiple sockets
+	serverSocketSet=SDLNet_AllocSocketSet(serverMaxClients);
+	if(serverSocketSet==NULL) {
+		serverLog("Could not alloacte socket set: %s\n", SDLNet_GetError());
+		exit(EXIT_FAILURE);
+	}
 
 	// Write to log
 	serverLog("Initialisation Complete\n");
