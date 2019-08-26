@@ -40,6 +40,8 @@ TCPsocket serverTcpSocket=NULL;
 UDPsocket serverUdpSocket=NULL;
 SDLNet_SocketSet serverMainUdpSocketSet=NULL;
 
+uint32_t serverUdpPacketNextId=0;
+
 Map *map=NULL;
 
 void serverInit(const char *mapFile);
@@ -54,6 +56,7 @@ bool serverSendDataToClient(ServerClient &client, const uint8_t *data, size_t le
 bool serverSendStrToClient(ServerClient &client, const char *str);
 
 void serverReadUdp(void);
+void serverWriteUdp(void);
 
 void serverLog(const char *format, ...);
 void serverLogV(const char *format, va_list ap);
@@ -86,6 +89,9 @@ int main(int argc, char **argv) {
 
 		// Check for socket activity
 		serverReadClients();
+
+		// Send out regular UDP state update
+		serverWriteUdp();
 
 		// Delay
 		// TODO: probably want to remove this
@@ -414,6 +420,47 @@ void serverReadUdp(void) {
 		}
 		if (i==serverMaxClients)
 			serverLog("Received UDP connection request from %u.%u.%u.%u:%u, str='%s', but no associated client\n", packet.address.host>>24, (packet.address.host>>16)&255, (packet.address.host>>8)&255, packet.address.host&255, packet.address.port, buffer);
+	}
+}
+
+void serverWriteUdp(void) {
+	// Create packet (in custom format)
+	// TODO: Fix this - current breaks if players leave/join (need id or similar in player entry)
+	UdpPacket packet(serverUdpPacketNextId++);
+	for(unsigned i=0; i<serverMaxClients; ++i) {
+		// Grab client
+		ServerClient &client=serverClients[i];
+		if (client.tcpSocketSetNumber==-1 || client.udpPort==-1)
+			continue;
+
+		// Add entry for this client/player
+		UdpPacket::PlayerEntry entry;
+		entry.x=client.object->getCamera().getX();
+		entry.y=client.object->getCamera().getY();
+		entry.z=client.object->getCamera().getZ();
+		entry.yaw=client.object->getCamera().getYaw();
+		packet.addPlayerEntry(entry);
+	}
+
+	// Convert packet from custom format to raw data to send over UDP
+	uint8_t buffer[256];
+	UDPpacket rawPacket;
+	rawPacket.data=buffer;
+	rawPacket.maxlen=256;
+	if (!packet.initSendData(rawPacket))
+		return;
+
+	// Send to all clients with UDP connection
+	for(unsigned i=0; i<serverMaxClients; ++i) {
+		// Grab client
+		ServerClient &client=serverClients[i];
+		if (client.tcpSocketSetNumber==-1 || client.udpPort==-1)
+			continue;
+
+		// Send packet
+		rawPacket.address.host=client.host;
+		rawPacket.address.port=client.udpPort;
+		SDLNet_UDP_Send(serverUdpSocket, -1, &rawPacket);
 	}
 }
 
