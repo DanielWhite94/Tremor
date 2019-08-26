@@ -143,7 +143,28 @@ bool Connection::sendStr(const char *str) {
 	return sendData((const uint8_t *)str, strlen(str));
 }
 
+bool Connection::udpReadPacket(UdpPacket &packet) {
+	// Not connected?
+	if (udpSocket==NULL)
+		return false;
+
+	// Read UDP packet
+	uint8_t buffer[256];
+	UDPpacket udpPacket;
+	udpPacket.data=buffer;
+	udpPacket.maxlen=256;
+	if (SDLNet_UDP_Recv(udpSocket, &udpPacket)!=1)
+		return false;
+
+	// Parse packet
+	if (!packet.initFromRecvData(udpPacket))
+		return false;
+
+	return true;
+}
+
 bool Connection::udpSendData(const uint8_t *data, size_t len) {
+	// Not connected?
 	if (udpSocket==NULL)
 		return false;
 
