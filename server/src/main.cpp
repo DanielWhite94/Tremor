@@ -31,7 +31,10 @@ struct ServerClient {
 ServerClient serverClients[serverMaxClients];
 
 SDLNet_SocketSet serverClientSocketSet=NULL;
+
 TCPsocket serverTcpSocket=NULL;
+UDPsocket serverUdpSocket=NULL;
+SDLNet_SocketSet serverMainUdpSocketSet=NULL;
 
 Map *map=NULL;
 
@@ -126,7 +129,7 @@ void serverInit(const char *mapFile) {
 
 	serverLog("Loaded map at: %s\n", mapFile);
 
-	// Open server socket
+	// Open server sockets
 	IPaddress ip;
 	if(SDLNet_ResolveHost(&ip, NULL, serverTcpPort)==-1) {
 		serverLog("Could not resolve host: %s\n", SDLNet_GetError());
@@ -139,12 +142,26 @@ void serverInit(const char *mapFile) {
 		exit(EXIT_FAILURE);
 	}
 
-	// Allocate socket set so we can manage multiple sockets
+	serverUdpSocket=SDLNet_UDP_Open(serverUdpPort);
+	if(serverUdpSocket==NULL) {
+		serverLog("Could not open UDP socket: %s\n", SDLNet_GetError());
+		exit(EXIT_FAILURE);
+	}
+
+	// Allocate socket sets so we can manage multiple sockets
 	serverClientSocketSet=SDLNet_AllocSocketSet(serverMaxClients);
 	if(serverClientSocketSet==NULL) {
 		serverLog("Could not allocate client socket set: %s\n", SDLNet_GetError());
 		exit(EXIT_FAILURE);
 	}
+
+	serverMainUdpSocketSet=SDLNet_AllocSocketSet(serverMaxClients);
+	if(serverMainUdpSocketSet==NULL) {
+		serverLog("Could not allocate main UDP socket set: %s\n", SDLNet_GetError());
+		exit(EXIT_FAILURE);
+	}
+
+	SDLNet_UDP_AddSocket(serverMainUdpSocketSet, serverUdpSocket); // TODO: check result?
 
 	// Write to log
 	serverLog("Initialisation Complete\n");
@@ -169,9 +186,14 @@ void serverQuit(void) {
 	if (serverClientSocketSet!=NULL)
 		SDLNet_FreeSocketSet(serverClientSocketSet);
 
-	// Close server socket
+	if (serverMainUdpSocketSet!=NULL)
+		SDLNet_FreeSocketSet(serverMainUdpSocketSet);
+
+	// Close server sockets
 	if (serverTcpSocket!=NULL)
 		SDLNet_TCP_Close(serverTcpSocket);
+	if (serverUdpSocket!=NULL)
+		SDLNet_UDP_Close(serverUdpSocket);
 
 	// Quit SDL
 	SDL_Quit();
