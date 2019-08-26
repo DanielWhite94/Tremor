@@ -9,6 +9,7 @@ public:
 	~Connection();
 
 	bool isConnected(void);
+	bool isConnectedUdp(void);
 
 	bool connectUdp(const char *host, int port, uint32_t secret);
 
