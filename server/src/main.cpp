@@ -29,6 +29,8 @@ struct ServerClient {
 
 	int udpPort; // set to -1 when not known/connected
 	uint32_t udpSecret;
+
+	Object *object;
 };
 ServerClient serverClients[serverMaxClients];
 
@@ -239,6 +241,10 @@ bool serverAcceptClient(void) {
 	IPaddress *remoteIp=SDLNet_TCP_GetPeerAddress(clientTcpSocket);
 	client.host=remoteIp->host;
 
+	const Object::MovementParameters clientMovementParameters={.jumpTime=1000000llu, .standHeight=0.5, .crouchHeight=0.3, .jumpHeight=0.3};
+	Camera clientCamera(map->getWidth()/2.0, map->getHeight()/2.0, clientMovementParameters.standHeight, 0.0);
+	client.object=new Object(0.3, 0.6, clientCamera, clientMovementParameters);
+
 	// Write to log
 	serverLog("New client: id=%i tcp addr=(%u.%u.%u.%u:%u), secret 0x%08X\n", clientTcpSocketSetNumber, client.host>>24, (client.host>>16)&255, (client.host>>8)&255, client.host&255, remoteIp->port, client.udpSecret);
 
@@ -254,6 +260,10 @@ void serverRemoveClient(int id) {
 	ServerClient &client=serverClients[id];
 	if (client.tcpSocketSetNumber==-1)
 		return;
+
+	// Free object
+	delete client.object;
+	client.object=NULL;
 
 	// Close socket and mark disconnected
 	SDLNet_TCP_Close(client.tcpSocket);
