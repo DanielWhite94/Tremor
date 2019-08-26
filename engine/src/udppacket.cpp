@@ -31,11 +31,12 @@ namespace TremorEngine {
 		id|=(((uint32_t)(*dataPtr++))<<0);
 
 		// Read player count
-		playerCount=*dataPtr++;
+		uint8_t packetPlayerCount=*dataPtr++;
 
 		// Read player data
 		// TODO: Avoid reading past rawPacket.len (especilly rawPacket.maxlen)
-		for(unsigned i=0; i<playerCount; ++i) {
+		playerCount=0;
+		for(unsigned i=0; i<packetPlayerCount; ++i) {
 			PlayerEntry entry;
 			memcpy((void *)&entry.x, (void *)dataPtr, sizeof(float));
 			dataPtr+=sizeof(float);
