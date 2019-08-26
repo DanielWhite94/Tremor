@@ -1,3 +1,4 @@
+#include <cstdint>
 #include <cstdio>
 #include <cstdlib>
 #include <unistd.h>
@@ -23,6 +24,11 @@ Connection *serverConnection=NULL;
 MicroSeconds mapFileRequestInterval=5*microSecondsPerSecond;
 MicroSeconds mapFileLastRequestTime=0;
 char *mapFile=NULL;
+
+MicroSeconds secretRequestInterval=5*microSecondsPerSecond;
+MicroSeconds secretLastRequestTime=0;
+uint32_t secret;
+bool haveSecret=false;
 
 // Functions
 void clientInit(const char *serverHost, int serverPort);
@@ -145,6 +151,18 @@ void clientCheckConnectionEvents(void) {
 
 				// Print info
 				printf("Server map file is '%s'\n", mapFile);
+			} else if (strncmp(gotName, "secret ", 7)==0) {
+				// Grab secret hex string
+				const char *secretHex=gotName+7;
+
+				// Convert hex to integer
+				if (sscanf(secretHex, "%08X", &secret)==1) {
+					// Set flag to indicate we have received this value
+					haveSecret=true;
+
+					// Print info
+					printf("Received secret %08X from server\n", secret);
+				}
 			}
 		}
 	}
@@ -161,4 +179,15 @@ void clientCheckConnectionEvents(void) {
 		printf("Requesting server map file...\n");
 	}
 
+	// Do we still require 'secret'?
+	if (!haveSecret && microSecondsGet()-secretLastRequestTime>=secretRequestInterval) {
+		// Send request
+		serverConnection->sendStr("get secret\n");
+
+		// Update last request time
+		secretLastRequestTime=microSecondsGet();
+
+		// Print info
+		printf("Requesting 'secret' from server...\n");
+	}
 }
