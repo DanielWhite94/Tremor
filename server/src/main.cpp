@@ -17,6 +17,7 @@ using namespace TremorEngine;
 #define serverMaxClients 32
 #define serverClientTcpBufferSize 1024
 #define serverTcpPort 9999
+#define serverUdpPort 9998
 
 struct ServerClient {
 	int tcSocketSetNumber; // set to -1 if slot unused
@@ -297,6 +298,10 @@ bool serverReadClient(ServerClient &client) {
 					return false;
 			} else if (strcmp(commandGetName, "map")==0) {
 				sprintf(responseStr, "got map %s\n", map->getFile());
+				if (!serverSendStrToClient(client, responseStr))
+					return false;
+			} else if (strcmp(commandGetName, "udpport")==0) {
+				sprintf(responseStr, "got udpport %u\n", serverUdpPort);
 				if (!serverSendStrToClient(client, responseStr))
 					return false;
 			}

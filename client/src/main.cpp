@@ -30,6 +30,9 @@ MicroSeconds secretLastRequestTime=0;
 uint32_t secret;
 bool haveSecret=false;
 
+MicroSeconds udpPortRequestInterval=5*microSecondsPerSecond;
+MicroSeconds udpPortLastRequestTime=0;
+
 const char *serverHost=NULL;
 int serverTcpPort=-1;
 int serverUdpPort=-1;
@@ -167,6 +170,15 @@ void clientCheckConnectionEvents(void) {
 					// Print info
 					printf("Received secret %08X from server\n", secret);
 				}
+			} else if (strncmp(gotName, "udpport ", 8)==0) {
+				// Grab secret hex string
+				const char *udpPortStr=gotName+8;
+
+				// Convert to integer
+				serverUdpPort=atoi(udpPortStr);
+
+				// Print info
+				printf("Received UDP port %u from server\n", serverUdpPort);
 			}
 		}
 	}
@@ -193,5 +205,17 @@ void clientCheckConnectionEvents(void) {
 
 		// Print info
 		printf("Requesting 'secret' from server...\n");
+	}
+
+	// Do we still require udp port?
+	if (serverUdpPort==-1 && microSecondsGet()-udpPortLastRequestTime>=udpPortRequestInterval) {
+		// Send request
+		serverConnection->sendStr("get udpport\n");
+
+		// Update last request time
+		udpPortLastRequestTime=microSecondsGet();
+
+		// Print info
+		printf("Requesting UDP port from server...\n");
 	}
 }
