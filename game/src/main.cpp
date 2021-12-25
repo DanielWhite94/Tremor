@@ -7,14 +7,14 @@
 using namespace TremorEngine;
 
 // Parameters
-const int windowWidth=640;
-const int windowHeight=480;
+const int windowWidth=2*640;
+const int windowHeight=2*480;
 
-const double fps=30.0;
+const double fps=2*30.0;
 
 const double moveSpeed=0.07;
 const double strafeSpeed=0.06;
-const double turnFactor=0.0006;
+const double turnFactor=0.0018;
 const double verticalTurnFactor=0.0004;
 const Object::MovementParameters playerMovementParametersStart={.jumpTime=1000000llu, .standHeight=0.5, .crouchHeight=0.3, .jumpHeight=0.3};
 
