@@ -79,7 +79,9 @@ namespace TremorEngine {
 		int computeBlockDisplayHeight(double blockHeightFraction, double distance);
 
 		double colourDistanceFactor(double distance) const ;
-		void colourAdjustForDistance(Colour &colour, double distance) const ;
+		Colour colourAdjustForDistance(const Colour &colour, double distance) const ;
+
+		void setRenderDrawColor(const Colour &colour);
 	};
 };
 

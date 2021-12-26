@@ -94,32 +94,26 @@ namespace TremorEngine {
 			zBuffer[i]=std::numeric_limits<double>::max();
 
 		// Clear surface.
-		SDL_SetRenderDrawColor(renderer, colourBg.r, colourBg.g, colourBg.b, colourBg.a);
+		setRenderDrawColor(colourBg);
 		SDL_Rect rect={0, 0, windowWidth, windowHeight};
 		SDL_RenderFillRect(renderer, &rect);
 
 		// Draw sky and ground.
 		int y;
 		for(y=0;y<windowHeight;++y) {
-			Colour colour;
-
 			if (y<horizonHeight) {
 				// Calculate distance in order to adjust colour.
 				double distance=unitBlockHeight/(2*(horizonHeight-y));
 
 				// Sky
-				colour=colourSky;
-				colourAdjustForDistance(colour, distance);
-				SDL_SetRenderDrawColor(renderer, colour.r, colour.g, colour.b, colour.a);
+				setRenderDrawColor(colourAdjustForDistance(colourSky, distance));
 				SDL_RenderDrawLine(renderer, 0, y, windowWidth, y);
 			} else {
 				// Calculate distance in order to adjust colour.
 				double distance=unitBlockHeight/(2*(y-horizonHeight));
 
 				// Ground
-				colour=colourGround;
-				colourAdjustForDistance(colour, distance);
-				SDL_SetRenderDrawColor(renderer, colour.r, colour.g, colour.b, colour.a);
+				setRenderDrawColor(colourAdjustForDistance(colourGround, distance));
 				SDL_RenderDrawLine(renderer, 0, y, windowWidth, y);
 			}
 		}
@@ -206,10 +200,10 @@ namespace TremorEngine {
 						Colour blockDisplayColour=slices[slicesNext].blockInfo.colour;
 						if (slices[slicesNext].intersectionSide==Ray::Side::Horizontal)
 							blockDisplayColour.mul(0.6); // make edges/corners between horizontal and vertical walls clearer
-						colourAdjustForDistance(blockDisplayColour, slices[slicesNext].distance);
+						blockDisplayColour=colourAdjustForDistance(blockDisplayColour, slices[slicesNext].distance);
 
 						// Draw block
-						SDL_SetRenderDrawColor(renderer, blockDisplayColour.r, blockDisplayColour.g, blockDisplayColour.b, blockDisplayColour.a);
+						setRenderDrawColor(blockDisplayColour);
 						SDL_RenderDrawLine(renderer, x, slices[slicesNext].blockDisplayBase-slices[slicesNext].blockDisplayHeight, x, slices[slicesNext].blockDisplayBase);
 					}
 				}
@@ -232,8 +226,8 @@ namespace TremorEngine {
 					if (!drawZBuffer) {
 						Colour blockTopDisplayColour=slices[slicesNext].blockInfo.colour;
 						blockTopDisplayColour.mul(1.05); // brighten top of blocks as if illuminated from above
-						colourAdjustForDistance(blockTopDisplayColour, slices[slicesNext].distance); // Note: distance is not quite correct - see note below when updating z-buffer
-						SDL_SetRenderDrawColor(renderer, blockTopDisplayColour.r, blockTopDisplayColour.g, blockTopDisplayColour.b, blockTopDisplayColour.a);
+						blockTopDisplayColour=colourAdjustForDistance(blockTopDisplayColour, slices[slicesNext].distance); // Note: distance is not quite correct - see note below when updating z-buffer
+						setRenderDrawColor(blockTopDisplayColour);
 						SDL_RenderDrawLine(renderer, x, blockDisplayTop-slices[slicesNext].blockDisplayTopSize, x, blockDisplayTop);
 					}
 
@@ -324,8 +318,7 @@ namespace TremorEngine {
 
 					// Draw pixel
 					if (!drawZBuffer) {
-						colourAdjustForDistance(pixel, objectDistance);
-						SDL_SetRenderDrawColor(renderer, pixel.r, pixel.g, pixel.b, pixel.a);
+						setRenderDrawColor(colourAdjustForDistance(pixel, objectDistance));
 						SDL_RenderDrawPoint(renderer, sx, sy);
 					}
 				}
@@ -370,7 +363,7 @@ namespace TremorEngine {
 		int x, y;
 
 		// Clear screen
-		SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
+		setRenderDrawColor(colourBlack);
 		SDL_Rect rect={xOffset, yOffset, (cellsWide*cellW)/divisor, (cellsHigh*cellH)/divisor};
 		SDL_RenderFillRect(renderer, &rect);
 
@@ -383,14 +376,14 @@ namespace TremorEngine {
 					continue;
 
 				// Draw block
-				SDL_SetRenderDrawColor(renderer, blockInfo.colour.r, blockInfo.colour.g, blockInfo.colour.b, blockInfo.colour.a);
+				setRenderDrawColor(blockInfo.colour);
 				SDL_Rect rect={SX(x), SY(y), cellW/divisor, cellH/divisor};
 				SDL_RenderFillRect(renderer, &rect);
 			}
 		}
 
 		// Draw grid over blocks
-		SDL_SetRenderDrawColor(renderer, 196, 196, 196, 255);
+		setRenderDrawColor(colourGrey);
 		for(x=minMapX;x<=maxMapX;++x)
 			SDL_RenderDrawLine(renderer, SX(x), yOffset, SX(x), windowHeight/divisor+yOffset);
 		for(y=minMapY;y<=maxMapY;++y)
@@ -408,7 +401,7 @@ namespace TremorEngine {
 				break;
 
 			// Draw highlighted cell.
-			SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255);
+			setRenderDrawColor(colourRed);
 			SDL_Rect rect={SX(x)+1, SY(y)+1, (cellW-1)/divisor, (cellH-1)/divisor};
 			SDL_RenderFillRect(renderer, &rect);
 
@@ -418,12 +411,12 @@ namespace TremorEngine {
 
 		// Draw cross-hair to represent camera
 		int k=2;
-		SDL_SetRenderDrawColor(renderer, 0, 0, 255, 255);
+		setRenderDrawColor(colourBlue);
 		SDL_RenderDrawLine(renderer, SX(camera.getX())-k, SY(camera.getY())-k, SX(camera.getX())+k, SY(camera.getY())+k);
 		SDL_RenderDrawLine(renderer, SX(camera.getX())-k, SY(camera.getY())+k, SX(camera.getX())+k, SY(camera.getY())-k);
 
 		// Draw camera's line of sight
-		SDL_SetRenderDrawColor(renderer, 0, 255, 0, 255);
+		setRenderDrawColor(colourGreen);
 		double len=10.0;
 		SDL_RenderDrawLine(renderer, SX(camera.getX()), SY(camera.getY()), SX(camera.getX()+cos(camera.getYaw())*len), SY(camera.getY()+sin(camera.getYaw())*len));
 
@@ -445,7 +438,13 @@ namespace TremorEngine {
 		return brightnessMin+distanceFactor*(brightnessMax-brightnessMin);
 	}
 
-	void Renderer::colourAdjustForDistance(Colour &colour, double distance) const {
-		colour.mul(colourDistanceFactor(distance));
+	Colour Renderer::colourAdjustForDistance(const Colour &colour, double distance) const {
+		Colour temp=colour;
+		temp.mul(colourDistanceFactor(distance));
+		return temp;
+	}
+
+	void Renderer::setRenderDrawColor(const Colour &colour) {
+		SDL_SetRenderDrawColor(renderer, colour.r, colour.g, colour.b, colour.a);
 	}
 };
