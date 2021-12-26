@@ -76,18 +76,18 @@ namespace TremorEngine {
 
 	void Renderer::render(const Camera &camera, bool drawZBuffer) {
 		// Calculate various useful values.
-		double screenDist=camera.getScreenDistance(windowWidth);
+		const double screenDist=camera.getScreenDistance(windowWidth);
 
-		int cameraZScreenAdjustment=(camera.getZ()-0.5)*unitBlockHeight;
+		const int cameraZScreenAdjustment=(camera.getZ()-0.5)*unitBlockHeight;
 
 		double cameraPitchScreenAdjustmentDouble=tan(camera.getPitch())*screenDist;
 		if (cameraPitchScreenAdjustmentDouble>windowHeight)
 			cameraPitchScreenAdjustmentDouble=windowHeight;
 		if (cameraPitchScreenAdjustmentDouble<-windowHeight)
 			cameraPitchScreenAdjustmentDouble=-windowHeight;
-		int cameraPitchScreenAdjustment=cameraPitchScreenAdjustmentDouble;
+		const int cameraPitchScreenAdjustment=cameraPitchScreenAdjustmentDouble;
 
-		int horizonHeight=windowHeight/2+cameraPitchScreenAdjustment;
+		const int horizonHeight=windowHeight/2+cameraPitchScreenAdjustment;
 
 		// Clear z-buffer to infinity values.
 		for(unsigned i=0; i<windowWidth*windowHeight; ++i)
@@ -129,8 +129,8 @@ namespace TremorEngine {
 		int x;
 		for(x=0;x<windowWidth;++x) {
 			// Trace ray from view point at this angle to collect a list of 'slices' of blocks to later draw.
-			double deltaAngle=atan((x-windowWidth/2)/screenDist);
-			double angle=camera.getYaw()+deltaAngle;
+			const double deltaAngle=atan((x-windowWidth/2)/screenDist);
+			const double angle=camera.getYaw()+deltaAngle;
 			Ray ray(camera.getX(), camera.getY(), angle);
 
 			#define SlicesMax 64
@@ -140,9 +140,7 @@ namespace TremorEngine {
 			ray.next(); // advance ray to first intersection point
 			while(ray.getTrueDistance()<camera.getMaxDist()) {
 				// Get info for block at current ray position.
-				int mapX=ray.getMapX();
-				int mapY=ray.getMapY();
-				if (!getBlockInfoFunctor(mapX, mapY, &slices[slicesNext].blockInfo, getBlockInfoUserData)) {
+				if (!getBlockInfoFunctor(ray.getMapX(), ray.getMapY(), &slices[slicesNext].blockInfo, getBlockInfoUserData)) {
 					ray.next(); // advance ray here as we skip proper advancing futher in loop body
 					continue; // no block
 				}
@@ -233,7 +231,7 @@ namespace TremorEngine {
 				if (blockDisplayTop>horizonHeight) {
 					if (!drawZBuffer) {
 						Colour blockTopDisplayColour=slices[slicesNext].blockInfo.colour;
-						blockTopDisplayColour.mul(1.05);
+						blockTopDisplayColour.mul(1.05); // brighten top of blocks as if illuminated from above
 						colourAdjustForDistance(blockTopDisplayColour, slices[slicesNext].distance); // Note: distance is not quite correct - see note below when updating z-buffer
 						SDL_SetRenderDrawColor(renderer, blockTopDisplayColour.r, blockTopDisplayColour.g, blockTopDisplayColour.b, blockTopDisplayColour.a);
 						SDL_RenderDrawLine(renderer, x, blockDisplayTop-slices[slicesNext].blockDisplayTopSize, x, blockDisplayTop);
@@ -426,7 +424,7 @@ namespace TremorEngine {
 
 		// Draw camera's line of sight
 		SDL_SetRenderDrawColor(renderer, 0, 255, 0, 255);
-		double len=64.0;
+		double len=10.0;
 		SDL_RenderDrawLine(renderer, SX(camera.getX()), SY(camera.getY()), SX(camera.getX()+cos(camera.getYaw())*len), SY(camera.getY()+sin(camera.getYaw())*len));
 
 		#undef SX
