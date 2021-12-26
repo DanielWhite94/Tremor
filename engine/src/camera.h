@@ -31,7 +31,8 @@ namespace TremorEngine {
 		void setY(double newY);
 		void setZ(double newZ);
 		void setYaw(double newYaw);
-		void setPitch(double newYaw); // limited to interval (-pi/2,pi/2)
+		void setPitch(double newYaw); // limited to interval (-pi/2,pi/2), or tighter if specified by setPitchLimits
+		void setPitchLimits(double pitchMin, double pitchMax); // limited to interval (-pi/2,pi/2), with pitchMin<pitchMax
 
 		void move(double delta); // Move in current direction (or backwards if delta is negative).
 		void strafe(double delta); // Move perpendicular to direction (left is delta is negative, right if positive).
@@ -39,7 +40,7 @@ namespace TremorEngine {
 		void pitch(double delta); // adjust pitch
 	private:
 		double x, y, z;
-		double yaw, pitchValue;
+		double yaw, pitchValue, pitchMin=-M_PI/2.0, pitchMax=M_PI/2.0;
 		double fov; // Field-of-view, radians.
 		double maxDist; // Maximum viewing distance.
 	};

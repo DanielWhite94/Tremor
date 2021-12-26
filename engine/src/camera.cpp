@@ -78,11 +78,22 @@ namespace TremorEngine {
 	}
 
 	void Camera::setPitch(double newPitch) {
-		if (newPitch<-M_PI/2.0)
-			newPitch=-M_PI/2.0;
-		if (newPitch>M_PI/2.0)
-			newPitch=M_PI/2.0;
+		if (newPitch<this->pitchMin)
+			newPitch=this->pitchMin;
+		if (newPitch>this->pitchMax)
+			newPitch=this->pitchMax;
 		pitchValue=newPitch;
+	}
+
+	void Camera::setPitchLimits(double pitchMin, double pitchMax) {
+		if (pitchMin<-M_PI/2.0)
+			pitchMin=-M_PI/2.0;
+		if (pitchMax>M_PI/2.0)
+			pitchMax=M_PI/2.0;
+		if (pitchMin<pitchMax) {
+			this->pitchMin=pitchMin;
+			this->pitchMax=pitchMax;
+		}
 	}
 
 	void Camera::move(double delta) {

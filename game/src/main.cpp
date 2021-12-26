@@ -125,6 +125,7 @@ void demoInit(const char *mapFile) {
 
 	// Create player object
 	Camera playerCamera(map->getWidth()/2.0, map->getHeight()/2.0, playerMovementParametersStart.standHeight, 0.0);
+	playerCamera.setPitchLimits(-M_PI/4.0, M_PI/4.0); // ray casting doesn't work so well beyond these limits
 	playerObject=new Object(0.3, 0.6, playerCamera, playerMovementParametersStart);
 }
 
