@@ -42,17 +42,17 @@ namespace TremorEngine {
 
 	private:
 		struct BlockDisplaySlice {
-			double distance;
-			Ray::Side intersectionSide;
+			double distance; // distance from camera to (first) intersection point with this block
+			Ray::Side intersectionSide; // basically which side of the block are we looking at
 
-			int blockDisplayBase;
-			int blockDisplayHeight;
+			int blockDisplayBase; // on screen Y-coordinate for bottom of line associated with this block strip
+			int blockDisplayHeight; // on screen height for said line
 
-			int blockDisplayTopSize; // only defined if top is visible
+			int blockDisplayTopSize; // on screen height of line representing top/roof of this block strip - only defined if top of block is visible
 
-			int blockTextureX; // only defined if block's texture!=NULL
+			int blockTextureX; // which strip of the relevant texture image to use when painting this block strip - only defined if block's texture!=NULL
 
-			BlockInfo blockInfo;
+			BlockInfo blockInfo; // raw block info as given by Map instance
 		};
 
 		SDL_Renderer *renderer;
