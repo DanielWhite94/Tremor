@@ -41,6 +41,16 @@ namespace TremorEngine {
 		void renderTopDown(const Camera &camera);
 
 	private:
+		struct RenderData {
+			const Camera &camera;
+			bool drawZBuffer;
+
+			double screenDist;
+			int cameraZScreenAdjustment;
+			int cameraPitchScreenAdjustment;
+			int horizonHeight;
+		};
+
 		struct BlockDisplaySlice {
 			double distance; // distance from camera to (first) intersection point with this block
 			Ray::Side intersectionSide; // basically which side of the block are we looking at
@@ -83,6 +93,12 @@ namespace TremorEngine {
 		Colour colourAdjustForDistance(const Colour &colour, double distance) const ;
 
 		void setRenderDrawColor(const Colour &colour);
+
+		// Helper functions for main render() routine
+		void renderSkyGround(const RenderData &renderData);
+		void renderBlocks(const RenderData &renderData);
+		void renderObjects(const RenderData &renderData);
+		void renderZBuffer(const RenderData &renderData);
 	};
 };
 

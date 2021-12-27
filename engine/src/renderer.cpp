@@ -75,19 +75,23 @@ namespace TremorEngine {
 	}
 
 	void Renderer::render(const Camera &camera, bool drawZBuffer) {
+		// Init RenderData struct
+		RenderData renderData={.camera=camera};
+		renderData.drawZBuffer=drawZBuffer;
+
 		// Calculate various useful values.
-		const double screenDist=camera.getScreenDistance(windowWidth);
+		renderData.screenDist=camera.getScreenDistance(windowWidth);
 
-		const int cameraZScreenAdjustment=(camera.getZ()-0.5)*unitBlockHeight;
+		renderData.cameraZScreenAdjustment=(camera.getZ()-0.5)*unitBlockHeight;
 
-		double cameraPitchScreenAdjustmentDouble=tan(camera.getPitch())*screenDist;
+		double cameraPitchScreenAdjustmentDouble=tan(camera.getPitch())*renderData.screenDist;
 		if (cameraPitchScreenAdjustmentDouble>windowHeight)
 			cameraPitchScreenAdjustmentDouble=windowHeight;
 		if (cameraPitchScreenAdjustmentDouble<-windowHeight)
 			cameraPitchScreenAdjustmentDouble=-windowHeight;
-		const int cameraPitchScreenAdjustment=cameraPitchScreenAdjustmentDouble;
+		renderData.cameraPitchScreenAdjustment=cameraPitchScreenAdjustmentDouble;
 
-		const int horizonHeight=windowHeight/2+cameraPitchScreenAdjustment;
+		renderData.horizonHeight=windowHeight/2+renderData.cameraPitchScreenAdjustment;
 
 		// Clear z-buffer to infinity values.
 		for(unsigned i=0; i<windowWidth*windowHeight; ++i)
@@ -99,247 +103,17 @@ namespace TremorEngine {
 		SDL_RenderFillRect(renderer, &rect);
 
 		// Draw sky and ground.
-		int y;
-		for(y=0;y<windowHeight;++y) {
-			if (y<horizonHeight) {
-				// Calculate distance in order to adjust colour.
-				double distance=unitBlockHeight/(2*(horizonHeight-y));
-
-				// Sky
-				setRenderDrawColor(colourAdjustForDistance(colourSky, distance));
-				SDL_RenderDrawLine(renderer, 0, y, windowWidth, y);
-			} else {
-				// Calculate distance in order to adjust colour.
-				double distance=unitBlockHeight/(2*(y-horizonHeight));
-
-				// Ground
-				setRenderDrawColor(colourAdjustForDistance(colourGround, distance));
-				SDL_RenderDrawLine(renderer, 0, y, windowWidth, y);
-			}
-		}
+		renderSkyGround(renderData);
 
 		// Draw blocks.
-		// Loop over each vertical slice of the screen.
-		int x;
-		for(x=0;x<windowWidth;++x) {
-			// Trace ray from view point at this angle to collect a list of 'slices' of blocks to later draw.
-			const double deltaAngle=atan((x-windowWidth/2)/screenDist);
-			const double angle=camera.getYaw()+deltaAngle;
-			Ray ray(camera.getX(), camera.getY(), angle);
-
-			#define SlicesMax 64
-			BlockDisplaySlice slices[SlicesMax];
-			size_t slicesNext=0;
-
-			ray.next(); // advance ray to first intersection point
-			while(ray.getTrueDistance()<camera.getMaxDist()) {
-				// Get info for block at current ray position.
-				if (!getBlockInfoFunctor(ray.getMapX(), ray.getMapY(), &slices[slicesNext].blockInfo, getBlockInfoUserData)) {
-					ray.next(); // advance ray here as we skip proper advancing futher in loop body
-					continue; // no block
-				}
-
-				// We have already added blockInfo to slice stack, so add and compute other fields now.
-				slices[slicesNext].distance=ray.getTrueDistance();
-				slices[slicesNext].intersectionSide=ray.getSide();
-				slices[slicesNext].blockDisplayBase=computeBlockDisplayBase(slices[slicesNext].distance, cameraZScreenAdjustment, cameraPitchScreenAdjustment);
-				slices[slicesNext].blockDisplayHeight=computeBlockDisplayHeight(slices[slicesNext].blockInfo.height, slices[slicesNext].distance);
-				if (slices[slicesNext].blockInfo.texture!=NULL) {
-					int textureW=slices[slicesNext].blockInfo.texture->getWidth();
-					slices[slicesNext].blockTextureX=ray.getTextureX(textureW);
-				}
-
-				// Advance ray to next itersection now ready for next iteration, and for use in block top calculations.
-				ray.next();
-
-				// If top of block is visible, compute some extra stuff.
-				int blockDisplayTop=slices[slicesNext].blockDisplayBase-slices[slicesNext].blockDisplayHeight;
-				if (blockDisplayTop>horizonHeight) {
-					slices[slicesNext].nextDistance=ray.getTrueDistance();
-					int nextBlockDisplayBase=computeBlockDisplayBase(slices[slicesNext].nextDistance, cameraZScreenAdjustment, cameraPitchScreenAdjustment);
-					int nextBlockDisplayHeight=computeBlockDisplayHeight(slices[slicesNext].blockInfo.height, slices[slicesNext].nextDistance);
-					int nextBlockDisplayTop=nextBlockDisplayBase-nextBlockDisplayHeight;
-					slices[slicesNext].blockDisplayTopSize=blockDisplayTop-nextBlockDisplayTop;
-				}
-
-				// If this block occupies whole column already, no point searching further.
-				// FIXME: this logic will break if we end up supporting mapping textures with transparency onto blocks
-				if (slices[slicesNext].blockDisplayHeight==slices[slicesNext].blockDisplayBase) {
-					++slicesNext;
-					break;
-				}
-
-				// Push slice to stack
-				++slicesNext;
-			}
-
-			// Loop over found blocks in reverse
-			while(slicesNext>0) {
-				// Adjust slicesNext now due to how it usually points one beyond last entry
-				--slicesNext;
-
-				// Draw block
-				if (!drawZBuffer) {
-					if (slices[slicesNext].blockInfo.texture!=NULL) {
-						// Textured block
-						// Note: we always ask the renderer to draw the whole slice - even if say we are very close to a block and so most of the slice is not visible anyway - hoping that it interally optimises the blit.
-
-						uint8_t colourMod=255;
-						if (slices[slicesNext].intersectionSide==Ray::Side::Horizontal)
-							colourMod*=0.6;
-						colourMod*=colourDistanceFactor(slices[slicesNext].distance);
-						SDL_SetTextureColorMod(slices[slicesNext].blockInfo.texture->getSdlTexture(), colourMod, colourMod, colourMod); // make edges/corners between horizontal and vertical walls clearer
-
-						SDL_Rect srcRect={.x=slices[slicesNext].blockTextureX, .y=0, .w=1, .h=slices[slicesNext].blockInfo.texture->getHeight()};
-						SDL_Rect destRect={.x=x, .y=slices[slicesNext].blockDisplayBase-slices[slicesNext].blockDisplayHeight, .w=1, .h=slices[slicesNext].blockDisplayHeight};
-						SDL_RenderCopy(renderer, slices[slicesNext].blockInfo.texture->getSdlTexture(), &srcRect, &destRect);
-					} else {
-						// Solid colour block
-
-						// Calculate display colour for block
-						Colour blockDisplayColour=slices[slicesNext].blockInfo.colour;
-						if (slices[slicesNext].intersectionSide==Ray::Side::Horizontal)
-							blockDisplayColour.mul(0.6); // make edges/corners between horizontal and vertical walls clearer
-						blockDisplayColour=colourAdjustForDistance(blockDisplayColour, slices[slicesNext].distance);
-
-						// Draw block
-						setRenderDrawColor(blockDisplayColour);
-						SDL_RenderDrawLine(renderer, x, slices[slicesNext].blockDisplayBase-slices[slicesNext].blockDisplayHeight, x, slices[slicesNext].blockDisplayBase);
-					}
-				}
-
-				// Update z-buffer
-				int zBufferYLoopStart=slices[slicesNext].blockDisplayBase-slices[slicesNext].blockDisplayHeight;
-				if (zBufferYLoopStart<0)
-					zBufferYLoopStart=0;
-				int zBufferYLoopEnd=slices[slicesNext].blockDisplayBase;
-				if (zBufferYLoopEnd>=windowHeight)
-					zBufferYLoopEnd=windowHeight-1;
-				for(int y=zBufferYLoopStart; y<=zBufferYLoopEnd; ++y) {
-					assert(slices[slicesNext].distance<zBuffer[x+y*windowWidth]);
-					zBuffer[x+y*windowWidth]=slices[slicesNext].distance;
-				}
-
-				// Do we need to draw top of this block? (because it is below the horizon)
-				int blockDisplayTop=slices[slicesNext].blockDisplayBase-slices[slicesNext].blockDisplayHeight;
-				if (blockDisplayTop>horizonHeight) {
-					if (!drawZBuffer) {
-						Colour blockTopDisplayColour=slices[slicesNext].blockInfo.colour;
-						blockTopDisplayColour.mul(1.05); // brighten top of blocks as if illuminated from above
-						blockTopDisplayColour=colourAdjustForDistance(blockTopDisplayColour, slices[slicesNext].distance); // Note: distance is not quite correct - see note below when updating z-buffer
-						setRenderDrawColor(blockTopDisplayColour);
-						SDL_RenderDrawLine(renderer, x, blockDisplayTop-slices[slicesNext].blockDisplayTopSize, x, blockDisplayTop);
-					}
-
-					// Update z-buffer
-					int zBufferYLoopStart=blockDisplayTop-slices[slicesNext].blockDisplayTopSize;
-					if (zBufferYLoopStart<0)
-						zBufferYLoopStart=0;
-					int zBufferYLoopEnd=blockDisplayTop;
-					if (zBufferYLoopEnd>=windowHeight)
-						zBufferYLoopEnd=windowHeight-1;
-					for(int y=zBufferYLoopStart; y<=zBufferYLoopEnd; ++y) {
-						// Note: this is not correct - the distance should start at the one used below,
-						// but then increase up to the ray's distance at next intersection point,
-						// as calculated in ray casting step. However this should be safe for the purposes
-						// of using the z-buffer for drawing sprites, which should be above the floor/tops
-						// anyway.
-						zBuffer[x+y*windowWidth]=slices[slicesNext].distance;
-					}
-				}
-			}
-
-			#undef SlicesMax
-		}
+		renderBlocks(renderData);
 
 		// Draw object sprites
-		std::vector<Object *> *objects=getObjectsInRangeFunctor(camera, getObjectsInRangeUserData);
+		renderObjects(renderData);
 
-		RendererCompareObjectsByDistance compareObjectsByDistance(camera);
-		std::sort(objects->begin(), objects->end(), compareObjectsByDistance); // sort so that we paint closer objects over the top of further away ones (the z buffer is not enough if textures are partially transparent)
-
-		for(auto object : *objects) {
-			// Determine angle (and distance) from camera to object, and skip drawing if object is behind camera.
-			double objectVisibleAngle, objectBearing, objectDistance;
-			camera.getTargetInfo(object->getCamera(), &objectVisibleAngle, &objectBearing, &objectDistance);
-
-			objectBearing=angleNormalise(objectBearing);
-			if (objectBearing<0.5*M_PI || objectBearing>1.5*M_PI)
-				continue;
-
-			// Determine x-coordinate of screen where object should appear, and its width.
-			// Skip drawing if zero-width or off screen (too far left or right).
-			int objectCentreScreenX=tan(objectBearing)*screenDist+windowWidth/2;
-			int objectScreenW=computeBlockDisplayHeight(object->getWidth(), objectDistance);
-			if (objectScreenW<=0 || objectCentreScreenX+objectScreenW/2<0 || objectCentreScreenX-objectScreenW/2>=windowWidth)
-				continue;
-
-			// Compute base and height of object on screen, and skip drawing if zero-height or off screen (too high/low).
-			int objectScreenBase=computeBlockDisplayBase(objectDistance, cameraZScreenAdjustment, cameraPitchScreenAdjustment);
-			int objectScreenH=computeBlockDisplayHeight(object->getHeight(), objectDistance);
-			if (objectScreenH<=0 || objectScreenBase<0 || objectScreenBase-objectScreenH>=windowHeight)
-				continue;
-
-			// Grab texture info and compute factors used to map screen pixels to texture pixels.
-			Texture *objectTexture=object->getTextureAngle(objectVisibleAngle);
-			if (objectTexture==NULL)
-				continue;
-
-			double textureXFactor=((double)objectTexture->getWidth())/objectScreenW;
-			double textureYFactor=((double)objectTexture->getHeight())/objectScreenH;
-
-			// Loop over all pixels in the w/h region, deciding whether to paint each one.
-			// Loop over y values
-			for(int ty=0, sy=objectScreenBase-objectScreenH; ty<objectScreenH; ++ty, ++sy) {
-				// Column off screen?
-				if (sy<0 || sy>=windowHeight)
-					continue;
-
-				// Loop over x values
-				int textureExtractY=ty*textureYFactor;
-				for(int tx=0, sx=objectCentreScreenX-objectScreenW/2; tx<objectScreenW; ++tx, ++sx) {
-					// Pixel off screen?
-					if (sx<0 || sx>=windowWidth)
-						continue;
-
-					// z-buffer indicates object would not be visible?
-					if (objectDistance>zBuffer[sx+sy*windowWidth])
-						continue;
-
-					// Grab pixel from texture and skip if completely transparent.
-					int textureExtractX=tx*textureXFactor;
-					Colour pixel=objectTexture->getPixel(textureExtractX, textureExtractY);
-					if (pixel.a==0)
-						continue;
-
-					// Update z-buffer (no need if not drawing it - we already draw objects back-to-front anyway)
-					if (drawZBuffer)
-						zBuffer[sx+sy*windowWidth]=objectDistance;
-
-					// Draw pixel
-					if (!drawZBuffer) {
-						setRenderDrawColor(colourAdjustForDistance(pixel, objectDistance));
-						SDL_RenderDrawPoint(renderer, sx, sy);
-					}
-				}
-			}
-		}
-
-		delete objects;
-
-		// If needed draw z-buffer
-		if (drawZBuffer) {
-			for(int y=0; y<windowHeight; ++y) {
-				for(int x=0; x<windowWidth; ++x) {
-					double distance=zBuffer[x+y*windowWidth];
-					double factor=(distance>1.0 ? 1.0/distance : 1.0);
-					uint8_t colour=(int)floor(255*factor);
-
-					SDL_SetRenderDrawColor(renderer, colour, colour, colour, 255);
-					SDL_RenderDrawPoint(renderer, x, y);
-				}
-			}
-		}
+		// Draw z-buffer
+		if (renderData.drawZBuffer)
+			renderZBuffer(renderData);
 	}
 
 	void Renderer::renderTopDown(const Camera &camera) {
@@ -447,4 +221,249 @@ namespace TremorEngine {
 	void Renderer::setRenderDrawColor(const Colour &colour) {
 		SDL_SetRenderDrawColor(renderer, colour.r, colour.g, colour.b, colour.a);
 	}
+
+	void Renderer::renderSkyGround(const RenderData &renderData) {
+		// Draw sky and ground as a series of lines varying in colour to simulate distance
+		int y;
+		for(y=0;y<windowHeight;++y) {
+			if (y<renderData.horizonHeight) {
+				// Calculate distance in order to adjust colour.
+				double distance=unitBlockHeight/(2*(renderData.horizonHeight-y));
+
+				// Sky
+				setRenderDrawColor(colourAdjustForDistance(colourSky, distance));
+				SDL_RenderDrawLine(renderer, 0, y, windowWidth, y);
+			} else {
+				// Calculate distance in order to adjust colour.
+				double distance=unitBlockHeight/(2*(y-renderData.horizonHeight));
+
+				// Ground
+				setRenderDrawColor(colourAdjustForDistance(colourGround, distance));
+				SDL_RenderDrawLine(renderer, 0, y, windowWidth, y);
+			}
+		}
+	}
+
+	void Renderer::renderBlocks(const RenderData &renderData) {
+		// Loop over each vertical slice of the screen.
+		int x;
+		for(x=0;x<windowWidth;++x) {
+			// Trace ray from view point at this angle to collect a list of 'slices' of blocks to later draw.
+			const double deltaAngle=atan((x-windowWidth/2)/renderData.screenDist);
+			const double angle=renderData.camera.getYaw()+deltaAngle;
+			Ray ray(renderData.camera.getX(), renderData.camera.getY(), angle);
+
+			#define SlicesMax 64
+			BlockDisplaySlice slices[SlicesMax];
+			size_t slicesNext=0;
+
+			ray.next(); // advance ray to first intersection point
+			while(ray.getTrueDistance()<renderData.camera.getMaxDist()) {
+				// Get info for block at current ray position.
+				if (!getBlockInfoFunctor(ray.getMapX(), ray.getMapY(), &slices[slicesNext].blockInfo, getBlockInfoUserData)) {
+					ray.next(); // advance ray here as we skip proper advancing futher in loop body
+					continue; // no block
+				}
+
+				// We have already added blockInfo to slice stack, so add and compute other fields now.
+				slices[slicesNext].distance=ray.getTrueDistance();
+				slices[slicesNext].intersectionSide=ray.getSide();
+				slices[slicesNext].blockDisplayBase=computeBlockDisplayBase(slices[slicesNext].distance, renderData.cameraZScreenAdjustment, renderData.cameraPitchScreenAdjustment);
+				slices[slicesNext].blockDisplayHeight=computeBlockDisplayHeight(slices[slicesNext].blockInfo.height, slices[slicesNext].distance);
+				if (slices[slicesNext].blockInfo.texture!=NULL) {
+					int textureW=slices[slicesNext].blockInfo.texture->getWidth();
+					slices[slicesNext].blockTextureX=ray.getTextureX(textureW);
+				}
+
+				// Advance ray to next itersection now ready for next iteration, and for use in block top calculations.
+				ray.next();
+
+				// If top of block is visible, compute some extra stuff.
+				int blockDisplayTop=slices[slicesNext].blockDisplayBase-slices[slicesNext].blockDisplayHeight;
+				if (blockDisplayTop>renderData.horizonHeight) {
+					slices[slicesNext].nextDistance=ray.getTrueDistance();
+					int nextBlockDisplayBase=computeBlockDisplayBase(slices[slicesNext].nextDistance, renderData.cameraZScreenAdjustment, renderData.cameraPitchScreenAdjustment);
+					int nextBlockDisplayHeight=computeBlockDisplayHeight(slices[slicesNext].blockInfo.height, slices[slicesNext].nextDistance);
+					int nextBlockDisplayTop=nextBlockDisplayBase-nextBlockDisplayHeight;
+					slices[slicesNext].blockDisplayTopSize=blockDisplayTop-nextBlockDisplayTop;
+				}
+
+				// If this block occupies whole column already, no point searching further.
+				// FIXME: this logic will break if we end up supporting mapping textures with transparency onto blocks
+				if (slices[slicesNext].blockDisplayHeight==slices[slicesNext].blockDisplayBase) {
+					++slicesNext;
+					break;
+				}
+
+				// Push slice to stack
+				++slicesNext;
+			}
+
+			// Loop over found blocks in reverse
+			while(slicesNext>0) {
+				// Adjust slicesNext now due to how it usually points one beyond last entry
+				--slicesNext;
+
+				// Draw block
+				if (!renderData.drawZBuffer) {
+					if (slices[slicesNext].blockInfo.texture!=NULL) {
+						// Textured block
+						// Note: we always ask the renderer to draw the whole slice - even if say we are very close to a block and so most of the slice is not visible anyway - hoping that it interally optimises the blit.
+
+						uint8_t colourMod=255;
+						if (slices[slicesNext].intersectionSide==Ray::Side::Horizontal)
+							colourMod*=0.6;
+						colourMod*=colourDistanceFactor(slices[slicesNext].distance);
+						SDL_SetTextureColorMod(slices[slicesNext].blockInfo.texture->getSdlTexture(), colourMod, colourMod, colourMod); // make edges/corners between horizontal and vertical walls clearer
+
+						SDL_Rect srcRect={.x=slices[slicesNext].blockTextureX, .y=0, .w=1, .h=slices[slicesNext].blockInfo.texture->getHeight()};
+						SDL_Rect destRect={.x=x, .y=slices[slicesNext].blockDisplayBase-slices[slicesNext].blockDisplayHeight, .w=1, .h=slices[slicesNext].blockDisplayHeight};
+						SDL_RenderCopy(renderer, slices[slicesNext].blockInfo.texture->getSdlTexture(), &srcRect, &destRect);
+					} else {
+						// Solid colour block
+
+						// Calculate display colour for block
+						Colour blockDisplayColour=slices[slicesNext].blockInfo.colour;
+						if (slices[slicesNext].intersectionSide==Ray::Side::Horizontal)
+							blockDisplayColour.mul(0.6); // make edges/corners between horizontal and vertical walls clearer
+						blockDisplayColour=colourAdjustForDistance(blockDisplayColour, slices[slicesNext].distance);
+
+						// Draw block
+						setRenderDrawColor(blockDisplayColour);
+						SDL_RenderDrawLine(renderer, x, slices[slicesNext].blockDisplayBase-slices[slicesNext].blockDisplayHeight, x, slices[slicesNext].blockDisplayBase);
+					}
+				}
+
+				// Update z-buffer
+				int zBufferYLoopStart=std::max(0, slices[slicesNext].blockDisplayBase-slices[slicesNext].blockDisplayHeight);
+				int zBufferYLoopEnd=std::min(slices[slicesNext].blockDisplayBase, windowHeight-1);
+				for(int y=zBufferYLoopStart; y<=zBufferYLoopEnd; ++y) {
+					assert(slices[slicesNext].distance<zBuffer[x+y*windowWidth]);
+					zBuffer[x+y*windowWidth]=slices[slicesNext].distance;
+				}
+
+				// Do we need to draw top of this block? (because it is below the horizon)
+				int blockDisplayTop=slices[slicesNext].blockDisplayBase-slices[slicesNext].blockDisplayHeight;
+				if (blockDisplayTop>renderData.horizonHeight) {
+					if (!renderData.drawZBuffer) {
+						Colour blockTopDisplayColour=slices[slicesNext].blockInfo.colour;
+						blockTopDisplayColour.mul(1.05); // brighten top of blocks as if illuminated from above
+						blockTopDisplayColour=colourAdjustForDistance(blockTopDisplayColour, slices[slicesNext].distance); // Note: distance is not quite correct - see note below when updating z-buffer
+						setRenderDrawColor(blockTopDisplayColour);
+						SDL_RenderDrawLine(renderer, x, blockDisplayTop-slices[slicesNext].blockDisplayTopSize, x, blockDisplayTop);
+					}
+
+					// Update z-buffer
+					int zBufferYLoopStart=blockDisplayTop-slices[slicesNext].blockDisplayTopSize;
+					if (zBufferYLoopStart<0)
+						zBufferYLoopStart=0;
+					int zBufferYLoopEnd=blockDisplayTop;
+					if (zBufferYLoopEnd>=windowHeight)
+						zBufferYLoopEnd=windowHeight-1;
+					for(int y=zBufferYLoopStart; y<=zBufferYLoopEnd; ++y) {
+						// Note: this is not correct - the distance should start at the one used below,
+						// but then increase up to the ray's distance at next intersection point,
+						// as calculated in ray casting step. However this should be safe for the purposes
+						// of using the z-buffer for drawing sprites, which should be above the floor/tops
+						// anyway.
+						zBuffer[x+y*windowWidth]=slices[slicesNext].distance;
+					}
+				}
+			}
+
+			#undef SlicesMax
+		}
+	}
+
+	void Renderer::renderObjects(const RenderData &renderData) {
+		// Grab a list of visible objects and sort them for painting
+		std::vector<Object *> *objects=getObjectsInRangeFunctor(renderData.camera, getObjectsInRangeUserData);
+
+		RendererCompareObjectsByDistance compareObjectsByDistance(renderData.camera);
+		std::sort(objects->begin(), objects->end(), compareObjectsByDistance); // sort so that we paint closer objects over the top of further away ones (the z buffer is not enough if textures are partially transparent)
+
+		// Loop over and draw all visible objects
+		for(auto object : *objects) {
+			// Determine angle (and distance) from camera to object, and skip drawing if object is behind camera.
+			double objectVisibleAngle, objectBearing, objectDistance;
+			renderData.camera.getTargetInfo(object->getCamera(), &objectVisibleAngle, &objectBearing, &objectDistance);
+
+			objectBearing=angleNormalise(objectBearing);
+			if (objectBearing<0.5*M_PI || objectBearing>1.5*M_PI)
+				continue;
+
+			// Determine x-coordinate of screen where object should appear, and its width.
+			// Skip drawing if zero-width or off screen (too far left or right).
+			int objectCentreScreenX=tan(objectBearing)*renderData.screenDist+windowWidth/2;
+			int objectScreenW=computeBlockDisplayHeight(object->getWidth(), objectDistance);
+			if (objectScreenW<=0 || objectCentreScreenX+objectScreenW/2<0 || objectCentreScreenX-objectScreenW/2>=windowWidth)
+				continue;
+
+			// Compute base and height of object on screen, and skip drawing if zero-height or off screen (too high/low).
+			int objectScreenBase=computeBlockDisplayBase(objectDistance, renderData.cameraZScreenAdjustment, renderData.cameraPitchScreenAdjustment);
+			int objectScreenH=computeBlockDisplayHeight(object->getHeight(), objectDistance);
+			if (objectScreenH<=0 || objectScreenBase<0 || objectScreenBase-objectScreenH>=windowHeight)
+				continue;
+
+			// Grab texture info and compute factors used to map screen pixels to texture pixels.
+			Texture *objectTexture=object->getTextureAngle(objectVisibleAngle);
+			if (objectTexture==NULL)
+				continue;
+
+			double textureXFactor=((double)objectTexture->getWidth())/objectScreenW;
+			double textureYFactor=((double)objectTexture->getHeight())/objectScreenH;
+
+			// Loop over all pixels in the w/h region, deciding whether to paint each one.
+			// Loop over y values
+			for(int ty=0, sy=objectScreenBase-objectScreenH; ty<objectScreenH; ++ty, ++sy) {
+				// Column off screen?
+				if (sy<0 || sy>=windowHeight)
+					continue;
+
+				// Loop over x values
+				int textureExtractY=ty*textureYFactor;
+				for(int tx=0, sx=objectCentreScreenX-objectScreenW/2; tx<objectScreenW; ++tx, ++sx) {
+					// Pixel off screen?
+					if (sx<0 || sx>=windowWidth)
+						continue;
+
+					// z-buffer indicates object would not be visible?
+					if (objectDistance>zBuffer[sx+sy*windowWidth])
+						continue;
+
+					// Grab pixel from texture and skip if completely transparent.
+					int textureExtractX=tx*textureXFactor;
+					Colour pixel=objectTexture->getPixel(textureExtractX, textureExtractY);
+					if (pixel.a==0)
+						continue;
+
+					// Update z-buffer (no need if not drawing it - we already draw objects back-to-front anyway)
+					if (renderData.drawZBuffer)
+						zBuffer[sx+sy*windowWidth]=objectDistance;
+
+					// Draw pixel
+					if (!renderData.drawZBuffer) {
+						setRenderDrawColor(colourAdjustForDistance(pixel, objectDistance));
+						SDL_RenderDrawPoint(renderer, sx, sy);
+					}
+				}
+			}
+		}
+
+		delete objects;
+	}
+
+	void Renderer::renderZBuffer(const RenderData &renderData) {
+		for(int y=0; y<windowHeight; ++y) {
+			for(int x=0; x<windowWidth; ++x) {
+				double distance=zBuffer[x+y*windowWidth];
+				double factor=(distance>1.0 ? 1.0/distance : 1.0);
+				uint8_t colour=(int)floor(255*factor);
+
+				SDL_SetRenderDrawColor(renderer, colour, colour, colour, 255);
+				SDL_RenderDrawPoint(renderer, x, y);
+			}
+		}
+	}
+
 };
