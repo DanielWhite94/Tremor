@@ -149,24 +149,24 @@ namespace TremorEngine {
 					slices[slicesNext].blockTextureX=ray.getTextureX(textureW);
 				}
 
-				// If this block occupies whole column already, no point searching further.
-				// FIXME: this logic will break if we end up supporting mapping textures with transparency onto blocks
-				if (slices[slicesNext].blockDisplayHeight==slices[slicesNext].blockDisplayBase) {
-					++slicesNext;
-					break;
-				}
-
 				// Advance ray to next itersection now ready for next iteration, and for use in block top calculations.
 				ray.next();
 
 				// If top of block is visible, compute some extra stuff.
 				int blockDisplayTop=slices[slicesNext].blockDisplayBase-slices[slicesNext].blockDisplayHeight;
 				if (blockDisplayTop>horizonHeight) {
-					double nextDistance=ray.getTrueDistance();
-					int nextBlockDisplayBase=computeBlockDisplayBase(nextDistance, cameraZScreenAdjustment, cameraPitchScreenAdjustment);
-					int nextBlockDisplayHeight=computeBlockDisplayHeight(slices[slicesNext].blockInfo.height, nextDistance);
+					slices[slicesNext].nextDistance=ray.getTrueDistance();
+					int nextBlockDisplayBase=computeBlockDisplayBase(slices[slicesNext].nextDistance, cameraZScreenAdjustment, cameraPitchScreenAdjustment);
+					int nextBlockDisplayHeight=computeBlockDisplayHeight(slices[slicesNext].blockInfo.height, slices[slicesNext].nextDistance);
 					int nextBlockDisplayTop=nextBlockDisplayBase-nextBlockDisplayHeight;
 					slices[slicesNext].blockDisplayTopSize=blockDisplayTop-nextBlockDisplayTop;
+				}
+
+				// If this block occupies whole column already, no point searching further.
+				// FIXME: this logic will break if we end up supporting mapping textures with transparency onto blocks
+				if (slices[slicesNext].blockDisplayHeight==slices[slicesNext].blockDisplayBase) {
+					++slicesNext;
+					break;
 				}
 
 				// Push slice to stack

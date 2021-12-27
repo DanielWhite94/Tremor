@@ -49,6 +49,7 @@ namespace TremorEngine {
 			int blockDisplayHeight; // on screen height for said line
 
 			int blockDisplayTopSize; // on screen height of line representing top/roof of this block strip - only defined if top of block is visible
+			double nextDistance; // distance from camera to second intersection point with this block (equivalently the ray's next point of intersection) - only defined if top of block is visible
 
 			int blockTextureX; // which strip of the relevant texture image to use when painting this block strip - only defined if block's texture!=NULL
 
