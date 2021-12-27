@@ -345,28 +345,28 @@ namespace TremorEngine {
 				// Do we need to draw top of this block? (because it is below the horizon)
 				int blockDisplayTop=slices[slicesNext].blockDisplayBase-slices[slicesNext].blockDisplayHeight;
 				if (blockDisplayTop>renderData.horizonHeight) {
-					if (!renderData.drawZBuffer) {
-						Colour blockTopDisplayColour=slices[slicesNext].blockInfo.colour;
-						blockTopDisplayColour.mul(1.05); // brighten top of blocks as if illuminated from above
-						blockTopDisplayColour=colourAdjustForDistance(blockTopDisplayColour, slices[slicesNext].distance); // Note: distance is not quite correct - see note below when updating z-buffer
-						setRenderDrawColor(blockTopDisplayColour);
-						SDL_RenderDrawLine(renderer, x, blockDisplayTop-slices[slicesNext].blockDisplayTopSize, x, blockDisplayTop);
-					}
-
-					// Update z-buffer
+					// This is a bit more involved because as we move across the slice of the block's top we change in distance from the camera
 					int zBufferYLoopStart=blockDisplayTop-slices[slicesNext].blockDisplayTopSize;
-					if (zBufferYLoopStart<0)
-						zBufferYLoopStart=0;
 					int zBufferYLoopEnd=blockDisplayTop;
-					if (zBufferYLoopEnd>=windowHeight)
-						zBufferYLoopEnd=windowHeight-1;
-					for(int y=zBufferYLoopStart; y<=zBufferYLoopEnd; ++y) {
-						// Note: this is not correct - the distance should start at the one used below,
-						// but then increase up to the ray's distance at next intersection point,
-						// as calculated in ray casting step. However this should be safe for the purposes
-						// of using the z-buffer for drawing sprites, which should be above the floor/tops
-						// anyway.
-						zBuffer[x+y*windowWidth]=slices[slicesNext].distance;
+					int y1=std::max(0, zBufferYLoopStart);
+					int y2=std::min(zBufferYLoopEnd, windowHeight-1);
+					for(int y=y1; y<=y2; ++y) {
+						// Compute distance and update z-buffer
+						assert(slices[slicesNext].distance<=slices[slicesNext].nextDistance);
+
+						double frac=(y-zBufferYLoopStart)/(zBufferYLoopEnd-zBufferYLoopStart+1.0);
+						assert(frac>=0.0 && frac<=1.0);
+
+						zBuffer[x+y*windowWidth]=frac*(slices[slicesNext].distance-slices[slicesNext].nextDistance)+slices[slicesNext].nextDistance;
+
+						// Draw pixel
+						if (!renderData.drawZBuffer) {
+							Colour blockTopDisplayColour=slices[slicesNext].blockInfo.colour;
+							blockTopDisplayColour.mul(1.05); // brighten top of blocks as if illuminated from above
+							blockTopDisplayColour=colourAdjustForDistance(blockTopDisplayColour, zBuffer[x+y*windowWidth]);
+							setRenderDrawColor(blockTopDisplayColour);
+							SDL_RenderDrawPoint(renderer, x, y);
+						}
 					}
 				}
 			}
