@@ -17,7 +17,7 @@
         },
         "textures":[
             {"id":0, "file":"images/wall1.png"},
-            {"id":1, "file":"images/wall2.png"},
+            {"id":1, "file":"images/wall3.jpg"},
             {"id":2, "file":"images/barrel.png"},
             {"id":3, "file":"images/lois/0.png"},
             {"id":4, "file":"images/lois/1.png"},
@@ -53,6 +53,28 @@
             },
             {
                 "x":9,
+                "y":6,
+                "height":1.2,
+                "colour":{
+                    "r":150,
+                    "g":150,
+                    "b":150
+                },
+                "texture":1
+            },
+            {
+                "x":10,
+                "y":6,
+                "height":1.2,
+                "colour":{
+                    "r":150,
+                    "g":150,
+                    "b":150
+                },
+                "texture":1
+            },
+            {
+                "x":11,
                 "y":6,
                 "height":1.2,
                 "colour":{
